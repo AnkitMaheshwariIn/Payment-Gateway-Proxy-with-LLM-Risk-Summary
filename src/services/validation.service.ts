@@ -1,24 +1,30 @@
 import { ValidationResult } from '../interfaces/charge.interface';
+import { 
+  PAYMENT_SOURCES, 
+  VALID_PAYMENT_SOURCES, 
+  CURRENCY_FORMAT, 
+  EMAIL_FORMAT, 
+  AMOUNT_VALIDATION 
+} from '../constants/app.constants';
 
 export class ValidationService {
   private static isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    return EMAIL_FORMAT.PATTERN.test(email);
   }
 
   private static isValidCurrency(currency: string): boolean {
-    return /^[A-Z]{3}$/.test(currency);
+    return CURRENCY_FORMAT.PATTERN.test(currency);
   }
 
   private static isValidSource(source: string): boolean {
-    return ['stripe', 'paypal'].includes(source);
+    return VALID_PAYMENT_SOURCES.includes(source as any);
   }
 
   public static validateAmount(amount: number): ValidationResult {
-    if (typeof amount !== 'number' || amount <= 0) {
+    if (typeof amount !== 'number' || amount <= AMOUNT_VALIDATION.MIN_VALUE) {
       return {
         isValid: false,
-        error: 'Amount must be a positive number'
+        error: `Amount must be a ${AMOUNT_VALIDATION.DESCRIPTION}`
       };
     }
     return { isValid: true };
@@ -28,7 +34,7 @@ export class ValidationService {
     if (typeof currency !== 'string' || !this.isValidCurrency(currency)) {
       return {
         isValid: false,
-        error: 'Currency must be a 3-letter string (e.g., \'USD\')'
+        error: `Currency must be a ${CURRENCY_FORMAT.DESCRIPTION}`
       };
     }
     return { isValid: true };
@@ -38,7 +44,7 @@ export class ValidationService {
     if (typeof source !== 'string' || !this.isValidSource(source)) {
       return {
         isValid: false,
-        error: 'Source must be either \'stripe\' or \'paypal\''
+        error: `Source must be either '${PAYMENT_SOURCES.STRIPE}' or '${PAYMENT_SOURCES.PAYPAL}'`
       };
     }
     return { isValid: true };
@@ -48,7 +54,7 @@ export class ValidationService {
     if (typeof email !== 'string' || !this.isValidEmail(email)) {
       return {
         isValid: false,
-        error: 'Email must be a valid email format'
+        error: `Email must be a ${EMAIL_FORMAT.DESCRIPTION}`
       };
     }
     return { isValid: true };

@@ -13,6 +13,7 @@ src/
 ├── services/           # Business logic and validation services
 ├── controllers/        # HTTP request/response handlers
 ├── routes/            # Express route definitions
+├── constants/          # Application constants and configuration
 └── index.ts           # Main application entry point
 ```
 
@@ -124,6 +125,9 @@ Validates payment charge data with comprehensive field validation.
 
 ### Routes (`src/routes/`)
 - `charge.routes.ts` - Express route definitions and controller mapping
+
+### Constants (`src/constants/`)
+- `app.constants.ts` - Application constants (payment sources, validation rules, server config, response status)
 
 ## Testing
 

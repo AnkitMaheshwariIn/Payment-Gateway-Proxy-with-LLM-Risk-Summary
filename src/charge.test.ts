@@ -1,11 +1,12 @@
 import request from 'supertest';
 import app from './index';
+import { PAYMENT_SOURCES, RESPONSE_STATUS } from './constants/app.constants';
 
 describe('POST /charge', () => {
   const validChargeData = {
     amount: 100,
     currency: 'USD',
-    source: 'stripe',
+    source: PAYMENT_SOURCES.STRIPE,
     email: 'test@example.com'
   };
 
@@ -16,7 +17,7 @@ describe('POST /charge', () => {
       .expect(200);
 
     expect(response.body).toEqual({
-      status: 'valid',
+      status: RESPONSE_STATUS.VALID,
       data: validChargeData
     });
   });
@@ -28,7 +29,7 @@ describe('POST /charge', () => {
       .expect(400);
 
     expect(response.body).toEqual({
-      status: 'error',
+      status: RESPONSE_STATUS.ERROR,
       error: 'Amount must be a positive number'
     });
   });
@@ -40,7 +41,7 @@ describe('POST /charge', () => {
       .expect(400);
 
     expect(response.body).toEqual({
-      status: 'error',
+      status: RESPONSE_STATUS.ERROR,
       error: 'Amount must be a positive number'
     });
   });
@@ -52,7 +53,7 @@ describe('POST /charge', () => {
       .expect(400);
 
     expect(response.body).toEqual({
-      status: 'error',
+      status: RESPONSE_STATUS.ERROR,
       error: 'Currency must be a 3-letter string (e.g., \'USD\')'
     });
   });
@@ -64,7 +65,7 @@ describe('POST /charge', () => {
       .expect(400);
 
     expect(response.body).toEqual({
-      status: 'error',
+      status: RESPONSE_STATUS.ERROR,
       error: 'Currency must be a 3-letter string (e.g., \'USD\')'
     });
   });
@@ -76,8 +77,8 @@ describe('POST /charge', () => {
       .expect(400);
 
     expect(response.body).toEqual({
-      status: 'error',
-      error: 'Source must be either \'stripe\' or \'paypal\''
+      status: RESPONSE_STATUS.ERROR,
+      error: `Source must be either '${PAYMENT_SOURCES.STRIPE}' or '${PAYMENT_SOURCES.PAYPAL}'`
     });
   });
 
@@ -88,7 +89,7 @@ describe('POST /charge', () => {
       .expect(400);
 
     expect(response.body).toEqual({
-      status: 'error',
+      status: RESPONSE_STATUS.ERROR,
       error: 'Email must be a valid email format'
     });
   });
@@ -96,12 +97,12 @@ describe('POST /charge', () => {
   it('should accept paypal as valid source', async () => {
     const response = await request(app)
       .post('/charge')
-      .send({ ...validChargeData, source: 'paypal' })
+      .send({ ...validChargeData, source: PAYMENT_SOURCES.PAYPAL })
       .expect(200);
 
     expect(response.body).toEqual({
-      status: 'valid',
-      data: { ...validChargeData, source: 'paypal' }
+      status: RESPONSE_STATUS.VALID,
+      data: { ...validChargeData, source: PAYMENT_SOURCES.PAYPAL }
     });
   });
 
@@ -112,7 +113,7 @@ describe('POST /charge', () => {
       .expect(200);
 
     expect(response.body).toEqual({
-      status: 'valid',
+      status: RESPONSE_STATUS.VALID,
       data: { ...validChargeData, currency: 'EUR' }
     });
   });

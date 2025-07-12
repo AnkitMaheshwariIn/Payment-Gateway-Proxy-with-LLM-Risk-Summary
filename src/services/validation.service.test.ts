@@ -1,4 +1,5 @@
 import { ValidationService } from './validation.service';
+import { PAYMENT_SOURCES } from '../constants/app.constants';
 
 describe('ValidationService', () => {
   describe('validateAmount', () => {
@@ -41,19 +42,19 @@ describe('ValidationService', () => {
 
   describe('validateSource', () => {
     it('should return valid for stripe', () => {
-      const result = ValidationService.validateSource('stripe');
+      const result = ValidationService.validateSource(PAYMENT_SOURCES.STRIPE);
       expect(result.isValid).toBe(true);
     });
 
     it('should return valid for paypal', () => {
-      const result = ValidationService.validateSource('paypal');
+      const result = ValidationService.validateSource(PAYMENT_SOURCES.PAYPAL);
       expect(result.isValid).toBe(true);
     });
 
     it('should return invalid for other sources', () => {
       const result = ValidationService.validateSource('square');
       expect(result.isValid).toBe(false);
-      expect(result.error).toBe('Source must be either \'stripe\' or \'paypal\'');
+      expect(result.error).toBe(`Source must be either '${PAYMENT_SOURCES.STRIPE}' or '${PAYMENT_SOURCES.PAYPAL}'`);
     });
   });
 

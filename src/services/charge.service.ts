@@ -1,5 +1,6 @@
 import { ChargeRequest, ChargeResponse } from '../interfaces/charge.interface';
 import { ValidationService } from './validation.service';
+import { RESPONSE_STATUS } from '../constants/app.constants';
 
 export class ChargeService {
   public static processCharge(chargeData: ChargeRequest): ChargeResponse {
@@ -7,7 +8,7 @@ export class ChargeService {
     const amountValidation = ValidationService.validateAmount(chargeData.amount);
     if (!amountValidation.isValid) {
       return {
-        status: 'error',
+        status: RESPONSE_STATUS.ERROR,
         error: amountValidation.error
       };
     }
@@ -16,7 +17,7 @@ export class ChargeService {
     const currencyValidation = ValidationService.validateCurrency(chargeData.currency);
     if (!currencyValidation.isValid) {
       return {
-        status: 'error',
+        status: RESPONSE_STATUS.ERROR,
         error: currencyValidation.error
       };
     }
@@ -25,7 +26,7 @@ export class ChargeService {
     const sourceValidation = ValidationService.validateSource(chargeData.source);
     if (!sourceValidation.isValid) {
       return {
-        status: 'error',
+        status: RESPONSE_STATUS.ERROR,
         error: sourceValidation.error
       };
     }
@@ -34,14 +35,14 @@ export class ChargeService {
     const emailValidation = ValidationService.validateEmail(chargeData.email);
     if (!emailValidation.isValid) {
       return {
-        status: 'error',
+        status: RESPONSE_STATUS.ERROR,
         error: emailValidation.error
       };
     }
 
     // If all validations pass, return success
     return {
-      status: 'valid',
+      status: RESPONSE_STATUS.VALID,
       data: chargeData
     };
   }
