@@ -57,16 +57,39 @@ Validates payment charge data with comprehensive field validation.
 - `source`: Must be either "stripe" or "paypal"
 - `email`: Must be a valid email format
 
+**Fraud Scoring:**
+The system calculates a fraud score based on risk factors:
+- **High Amount**: +0.3 points if amount > $5,000
+- **Risky Domain**: +0.4 points if email ends with .ru or .xyz
+- **Non-Standard Currency**: +0.2 points if currency is not USD, EUR, or INR
+
+**Risk Assessment:**
+- **Low Risk** (score < 0.5): Returns 200 with "safe" status
+- **High Risk** (score ≥ 0.5): Returns 403 with "High risk" error
+- **Risk Percentage**: Calculated as (fraudScore × 100)%
+
 **Success Response (200):**
 ```json
 {
-  "status": "valid",
+  "status": "safe",
   "data": {
     "amount": 100,
     "currency": "USD",
     "source": "stripe",
     "email": "user@example.com"
-  }
+  },
+  "fraudScore": 0.3,
+  "riskPercentage": 30
+}
+```
+
+**High Risk Response (403):**
+```json
+{
+  "status": "error",
+  "error": "High risk",
+  "fraudScore": 0.7,
+  "riskPercentage": 70
 }
 ```
 
@@ -119,6 +142,7 @@ Validates payment charge data with comprehensive field validation.
 ### Services (`src/services/`)
 - `validation.service.ts` - Static class containing all validation logic
 - `charge.service.ts` - Static class containing business logic for charge processing
+- `fraud.service.ts` - Static class containing fraud detection and scoring logic
 
 ### Controllers (`src/controllers/`)
 - `charge.controller.ts` - HTTP request/response handling for charge operations

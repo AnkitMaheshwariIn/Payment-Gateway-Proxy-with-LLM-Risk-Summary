@@ -1,5 +1,6 @@
 import { ChargeRequest, ChargeResponse } from '../interfaces/charge.interface';
 import { ValidationService } from './validation.service';
+import { FraudService } from './fraud.service';
 import { RESPONSE_STATUS } from '../constants/app.constants';
 
 export class ChargeService {
@@ -40,10 +41,15 @@ export class ChargeService {
       };
     }
 
-    // If all validations pass, return success
+    // Calculate fraud score
+    const fraudResult = FraudService.calculateFraudScore(chargeData);
+
+    // If all validations pass, return success with fraud score
     return {
       status: RESPONSE_STATUS.VALID,
-      data: chargeData
+      data: chargeData,
+      fraudScore: fraudResult.fraudScore,
+      riskPercentage: fraudResult.riskPercentage
     };
   }
 } 

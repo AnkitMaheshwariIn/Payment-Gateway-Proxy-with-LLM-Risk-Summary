@@ -9,9 +9,17 @@ export interface ChargeResponse {
   status: string;
   data?: ChargeRequest;
   error?: string;
+  fraudScore?: number;
+  riskPercentage?: number;
 }
 
 export interface ValidationResult {
   isValid: boolean;
   error?: string;
+}
+
+export interface FraudScoreResult {
+  fraudScore: number;
+  riskPercentage: number;
+  isHighRisk: boolean;
 } 

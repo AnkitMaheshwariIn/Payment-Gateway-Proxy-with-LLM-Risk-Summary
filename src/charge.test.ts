@@ -10,15 +10,17 @@ describe('POST /charge', () => {
     email: 'test@example.com'
   };
 
-  it('should return 200 with valid data', async () => {
+  it('should return 200 with safe status and fraud score for low-risk transaction', async () => {
     const response = await request(app)
       .post('/charge')
       .send(validChargeData)
       .expect(200);
 
     expect(response.body).toEqual({
-      status: RESPONSE_STATUS.VALID,
-      data: validChargeData
+      status: RESPONSE_STATUS.SAFE,
+      data: validChargeData,
+      fraudScore: 0,
+      riskPercentage: 0
     });
   });
 
@@ -113,8 +115,90 @@ describe('POST /charge', () => {
       .expect(200);
 
     expect(response.body).toEqual({
-      status: RESPONSE_STATUS.VALID,
-      data: { ...validChargeData, currency: 'EUR' }
+      status: RESPONSE_STATUS.SAFE,
+      data: { ...validChargeData, currency: 'EUR' },
+      fraudScore: 0,
+      riskPercentage: 0
+    });
+  });
+
+  // Fraud scoring tests
+  it('should return 403 for high-risk transaction (high amount + risky domain)', async () => {
+    const highRiskData = {
+      ...validChargeData,
+      amount: 6000,
+      email: 'test@example.ru'
+    };
+
+    const response = await request(app)
+      .post('/charge')
+      .send(highRiskData)
+      .expect(403);
+
+    expect(response.body).toEqual({
+      status: RESPONSE_STATUS.ERROR,
+      error: 'High risk',
+      fraudScore: 0.7,
+      riskPercentage: 70
+    });
+  });
+
+  it('should return 200 for medium-risk transaction (high amount only)', async () => {
+    const mediumRiskData = {
+      ...validChargeData,
+      amount: 6000
+    };
+
+    const response = await request(app)
+      .post('/charge')
+      .send(mediumRiskData)
+      .expect(200);
+
+    expect(response.body).toEqual({
+      status: RESPONSE_STATUS.SAFE,
+      data: mediumRiskData,
+      fraudScore: 0.3,
+      riskPercentage: 30
+    });
+  });
+
+  it('should return 403 for high-risk transaction (risky domain + non-standard currency)', async () => {
+    const highRiskData = {
+      ...validChargeData,
+      email: 'test@example.xyz',
+      currency: 'GBP'
+    };
+
+    const response = await request(app)
+      .post('/charge')
+      .send(highRiskData)
+      .expect(403);
+
+    expect(response.body).toEqual({
+      status: RESPONSE_STATUS.ERROR,
+      error: 'High risk',
+      fraudScore: 0.6,
+      riskPercentage: 60
+    });
+  });
+
+  it('should return 200 for safe transaction with some risk factors', async () => {
+    const safeData = {
+      ...validChargeData,
+      amount: 6000,
+      currency: 'INR'
+    };
+
+    const response = await request(app)
+      .post('/charge')
+      .send(safeData)
+      .expect(200);
+
+    expect(response.body).toEqual({
+      status: RESPONSE_STATUS.SAFE,
+      data: safeData,
+      fraudScore: 0.3,
+      riskPercentage: 30
     });
   });
 }); 

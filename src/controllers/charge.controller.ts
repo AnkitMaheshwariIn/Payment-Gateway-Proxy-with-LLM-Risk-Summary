@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { ChargeRequest } from '../interfaces/charge.interface';
 import { ChargeService } from '../services/charge.service';
+import { FraudService } from '../services/fraud.service';
 import { RESPONSE_STATUS, ERROR_MESSAGES } from '../constants/app.constants';
 
 export class ChargeController {
@@ -12,7 +13,24 @@ export class ChargeController {
       if (result.status === RESPONSE_STATUS.ERROR) {
         res.status(400).json(result);
       } else {
-        res.status(200).json(result);
+        // Check fraud score for high risk
+        const fraudResult = FraudService.calculateFraudScore(chargeData);
+        
+        if (fraudResult.isHighRisk) {
+          res.status(403).json({
+            status: RESPONSE_STATUS.ERROR,
+            error: ERROR_MESSAGES.HIGH_RISK,
+            fraudScore: fraudResult.fraudScore,
+            riskPercentage: fraudResult.riskPercentage
+          });
+        } else {
+          res.status(200).json({
+            status: RESPONSE_STATUS.SAFE,
+            data: chargeData,
+            fraudScore: fraudResult.fraudScore,
+            riskPercentage: fraudResult.riskPercentage
+          });
+        }
       }
     } catch (error) {
       res.status(500).json({
