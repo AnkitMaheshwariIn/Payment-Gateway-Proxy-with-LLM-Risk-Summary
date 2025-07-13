@@ -6,11 +6,14 @@ import {
 
 /**
  * Service class for generating natural language explanations using OpenAI's GPT models.
- * Provides intelligent, contextual explanations of fraud risk factors.
+ * Provides intelligent, contextual explanations of fraud risk factors with in-memory caching.
  */
 export class LLMService {
   /** Singleton instance of OpenAI client to avoid multiple initializations */
   private static openai: OpenAI;
+  
+  /** In-memory cache for storing generated explanations to avoid redundant API calls */
+  private static explanationCache: Map<string, string> = new Map();
 
   /**
    * Initializes and returns the OpenAI client instance.
@@ -30,8 +33,34 @@ export class LLMService {
   }
 
   /**
+   * Generates a unique cache key based on transaction parameters and triggered rules.
+   * This ensures that identical transactions with the same risk factors return cached explanations.
+   * 
+   * @param amount - Transaction amount
+   * @param currency - Three-letter currency code
+   * @param email - Customer email address
+   * @param triggeredRules - Array of triggered risk rules
+   * @returns string - Unique cache key
+   * 
+   * @private
+   */
+  private static generateCacheKey(
+    amount: number,
+    currency: string,
+    email: string,
+    triggeredRules: string[]
+  ): string {
+    // Sort triggered rules to ensure consistent cache keys regardless of order
+    const sortedRules = [...triggeredRules].sort();
+    
+    // Create a unique key combining all parameters
+    return `${amount}-${currency}-${email}-${sortedRules.join('|')}`;
+  }
+
+  /**
    * Generates a natural language explanation of fraud risk factors using OpenAI GPT-3.5-turbo.
    * Creates a professional, contextual explanation based on transaction details and triggered risk rules.
+   * Implements in-memory caching to avoid redundant API calls for identical transactions.
    * 
    * @param amount - Transaction amount in the specified currency
    * @param currency - Three-letter currency code (e.g., USD, EUR)
@@ -57,6 +86,15 @@ export class LLMService {
     triggeredRules: string[]
   ): Promise<string> {
     try {
+      // Generate cache key for this specific transaction
+      const cacheKey = this.generateCacheKey(amount, currency, email, triggeredRules);
+      
+      // Check if explanation already exists in cache
+      if (this.explanationCache.has(cacheKey)) {
+        console.log(`📋 Using cached explanation for transaction: ${amount} ${currency} to ${email}`);
+        return this.explanationCache.get(cacheKey)!;
+      }
+      
       // Get OpenAI client instance
       const openai = this.getOpenAI();
       
@@ -92,15 +130,26 @@ export class LLMService {
       // Extract and return the generated explanation
       const generatedExplanation = completion.choices[0]?.message?.content?.trim();
       
-      // Return generated explanation or fallback if API response is empty
-      return generatedExplanation || this.generateFallbackExplanation(fraudScore, triggeredRules);
+      // Get final explanation (generated or fallback)
+      const finalExplanation = generatedExplanation || this.generateFallbackExplanation(fraudScore, triggeredRules);
+      
+      // Store the explanation in cache for future use
+      this.explanationCache.set(cacheKey, finalExplanation);
+      console.log(`💾 Cached explanation for transaction: ${amount} ${currency} to ${email}`);
+      
+      return finalExplanation;
       
     } catch (error) {
       // Log error for debugging purposes
       console.error('Error generating fraud explanation via OpenAI API:', error);
-      
+      // Generate fallback explanation
+      const fallback = this.generateFallbackExplanation(fraudScore, triggeredRules);
+      // Cache the fallback explanation as well
+      const cacheKey = this.generateCacheKey(amount, currency, email, triggeredRules);
+      this.explanationCache.set(cacheKey, fallback);
+      console.log(`💾 Cached fallback explanation for transaction: ${amount} ${currency} to ${email}`);
       // Return fallback explanation if API call fails
-      return this.generateFallbackExplanation(fraudScore, triggeredRules);
+      return fallback;
     }
   }
 
@@ -125,5 +174,41 @@ export class LLMService {
     }
     
     return `Transaction flagged with ${riskPercentage}% risk due to ${triggeredRules.join(', ').toLowerCase()}.`;
+  }
+
+  /**
+   * Clears the in-memory explanation cache.
+   * Useful for testing or when cache needs to be reset.
+   * 
+   * @public
+   */
+  public static clearCache(): void {
+    this.explanationCache.clear();
+    console.log('🗑️  Explanation cache cleared');
+  }
+
+  /**
+   * Gets the current size of the explanation cache.
+   * Useful for monitoring cache performance and memory usage.
+   * 
+   * @returns number - Number of cached explanations
+   * 
+   * @public
+   */
+  public static getCacheSize(): number {
+    return this.explanationCache.size;
+  }
+
+  /**
+   * Gets a specific cached explanation by cache key.
+   * Useful for debugging and cache inspection.
+   * 
+   * @param cacheKey - The cache key to look up
+   * @returns string | undefined - Cached explanation or undefined if not found
+   * 
+   * @public
+   */
+  public static getCachedExplanation(cacheKey: string): string | undefined {
+    return this.explanationCache.get(cacheKey);
   }
 } 

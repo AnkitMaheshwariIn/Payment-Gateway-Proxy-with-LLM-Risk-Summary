@@ -21,6 +21,7 @@ src/
 
 - **POST /charge** - Payment validation endpoint with comprehensive field validation
 - **GET /health** - Health check endpoint
+- **GET /transactions** - Retrieve all stored transactions with audit trail
 - **Class-based Architecture** - Clean separation of concerns
 - **TypeScript** - Full type safety and IntelliSense support
 - **Comprehensive Testing** - Unit and integration tests
@@ -38,6 +39,38 @@ Health check endpoint that returns server status.
   "status": "ok"
 }
 ```
+
+### GET /transactions
+Returns all stored transactions from the in-memory transaction log.
+
+**Response:**
+```json
+{
+  "status": "ok",
+  "data": {
+    "transactions": [
+      {
+        "transactionId": "uuid-string",
+        "timestamp": "2024-01-01T00:00:00.000Z",
+        "amount": 100,
+        "currency": "USD",
+        "source": "stripe",
+        "email": "user@example.com",
+        "fraudScore": 0.3,
+        "decision": "approved",
+        "llmExplanation": "Transaction flagged as medium risk due to high transaction amount."
+      }
+    ],
+    "count": 1
+  }
+}
+```
+
+**Features:**
+- Returns all transactions stored in memory
+- Includes transaction count for easy pagination planning
+- Each transaction contains complete audit trail data
+- Transactions are returned in chronological order (oldest first)
 
 ### POST /charge
 Validates payment charge data with comprehensive field validation.
@@ -175,6 +208,9 @@ The system calculates a fraud score based on risk factors:
    ⏰ Timestamp: 2024-01-01T00:00:00.000Z
    
    ✅ Server is running on port 3000
+   🔗 Health check available at http://localhost:3000/health
+   💳 Charge endpoint available at http://localhost:3000/charge
+   📊 Transactions endpoint available at http://localhost:3000/transactions
    🎉 All services are healthy! Server is ready to handle requests.
    ```
 
@@ -268,6 +304,11 @@ npm test
        "source": "stripe",
        "email": "test@example.com"
      }'
+   ```
+
+4. View all transactions:
+   ```bash
+   curl http://localhost:3000/transactions
    ```
 
 ## 🔒 License
