@@ -8,10 +8,12 @@ import {
 export class FraudService {
   public static calculateFraudScore(chargeData: ChargeRequest): FraudScoreResult {
     let fraudScore = 0;
+    const triggeredRules: string[] = [];
 
     // Check for high amount
     if (chargeData.amount > FRAUD_SCORING.HIGH_AMOUNT_THRESHOLD) {
       fraudScore += FRAUD_SCORING.HIGH_AMOUNT_SCORE;
+      triggeredRules.push('High Amount');
     }
 
     // Check for risky email domain
@@ -21,11 +23,13 @@ export class FraudService {
     );
     if (hasRiskyDomain) {
       fraudScore += FRAUD_SCORING.RISKY_DOMAIN_SCORE;
+      triggeredRules.push('Suspicious Email Domain');
     }
 
     // Check for non-standard currency
     if (!STANDARD_CURRENCIES.includes(chargeData.currency as any)) {
       fraudScore += FRAUD_SCORING.NON_STANDARD_CURRENCY_SCORE;
+      triggeredRules.push('Unsupported Currency');
     }
 
     // Calculate risk percentage (fraud score as percentage)
@@ -37,7 +41,8 @@ export class FraudService {
     return {
       fraudScore,
       riskPercentage,
-      isHighRisk
+      isHighRisk,
+      triggeredRules
     };
   }
 } 

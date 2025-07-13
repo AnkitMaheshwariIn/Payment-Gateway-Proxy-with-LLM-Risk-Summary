@@ -67,6 +67,14 @@ The system calculates a fraud score based on risk factors:
 - **Low Risk** (score < 0.5): Returns 200 with "safe" status
 - **High Risk** (score ≥ 0.5): Returns 403 with "High risk" error
 - **Risk Percentage**: Calculated as (fraudScore × 100)%
+- **LLM Explanation**: Natural language explanation of risk factors using OpenAI GPT-3.5-turbo
+
+**LLM Configuration:**
+- **Model**: GPT-3.5-turbo for optimal performance and cost
+- **Max Tokens**: 150 for concise explanations
+- **Temperature**: 0.3 for consistent, professional output
+- **System Prompt**: Fraud detection expert persona
+- **Fallback**: Automatic fallback explanations if API unavailable
 
 **Success Response (200):**
 ```json
@@ -79,7 +87,8 @@ The system calculates a fraud score based on risk factors:
     "email": "user@example.com"
   },
   "fraudScore": 0.3,
-  "riskPercentage": 30
+  "riskPercentage": 30,
+  "explanation": "Transaction flagged as medium risk due to high transaction amount."
 }
 ```
 
@@ -89,7 +98,8 @@ The system calculates a fraud score based on risk factors:
   "status": "error",
   "error": "High risk",
   "fraudScore": 0.7,
-  "riskPercentage": 70
+  "riskPercentage": 70,
+  "explanation": "Transaction flagged as high risk due to suspicious email domain and unsupported currency."
 }
 ```
 
@@ -113,6 +123,24 @@ The system calculates a fraud score based on risk factors:
    ```bash
    npm install
    ```
+
+3. **Set up environment variables:**
+   ```bash
+   # Create .env file
+   cat > .env << EOF
+   # OpenAI API Configuration
+   OPENAI_API_KEY=your_openai_api_key_here
+   
+   # Server Configuration (optional - defaults to 3000)
+   PORT=3000
+   EOF
+   ```
+   
+   **Required Environment Variables:**
+   - `OPENAI_API_KEY`: Your OpenAI API key for LLM explanations
+   
+   **Optional Environment Variables:**
+   - `PORT`: Server port (defaults to 3000)
 
 3. **Development:**
    ```bash
@@ -143,6 +171,7 @@ The system calculates a fraud score based on risk factors:
 - `validation.service.ts` - Static class containing all validation logic
 - `charge.service.ts` - Static class containing business logic for charge processing
 - `fraud.service.ts` - Static class containing fraud detection and scoring logic
+- `llm.service.ts` - Static class containing OpenAI integration for natural language explanations
 
 ### Controllers (`src/controllers/`)
 - `charge.controller.ts` - HTTP request/response handling for charge operations
@@ -151,7 +180,7 @@ The system calculates a fraud score based on risk factors:
 - `charge.routes.ts` - Express route definitions and controller mapping
 
 ### Constants (`src/constants/`)
-- `app.constants.ts` - Application constants (payment sources, validation rules, server config, response status)
+- `app.constants.ts` - Application constants (payment sources, validation rules, server config, response status, LLM configuration)
 
 ## Testing
 

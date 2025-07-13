@@ -1,10 +1,11 @@
 import { ChargeRequest, ChargeResponse } from '../interfaces/charge.interface';
 import { ValidationService } from './validation.service';
 import { FraudService } from './fraud.service';
+import { LLMService } from './llm.service';
 import { RESPONSE_STATUS } from '../constants/app.constants';
 
 export class ChargeService {
-  public static processCharge(chargeData: ChargeRequest): ChargeResponse {
+  public static async processCharge(chargeData: ChargeRequest): Promise<ChargeResponse> {
     // Validate amount
     const amountValidation = ValidationService.validateAmount(chargeData.amount);
     if (!amountValidation.isValid) {
@@ -44,12 +45,22 @@ export class ChargeService {
     // Calculate fraud score
     const fraudResult = FraudService.calculateFraudScore(chargeData);
 
-    // If all validations pass, return success with fraud score
+    // Generate LLM explanation
+    const explanation = await LLMService.generateFraudExplanation(
+      chargeData.amount,
+      chargeData.currency,
+      chargeData.email,
+      fraudResult.fraudScore,
+      fraudResult.triggeredRules
+    );
+
+    // If all validations pass, return success with fraud score and explanation
     return {
       status: RESPONSE_STATUS.VALID,
       data: chargeData,
       fraudScore: fraudResult.fraudScore,
-      riskPercentage: fraudResult.riskPercentage
+      riskPercentage: fraudResult.riskPercentage,
+      explanation
     };
   }
 } 

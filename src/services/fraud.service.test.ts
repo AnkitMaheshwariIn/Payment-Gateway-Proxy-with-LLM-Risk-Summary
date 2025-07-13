@@ -20,6 +20,7 @@ describe('FraudService', () => {
       expect(result.fraudScore).toBe(0);
       expect(result.riskPercentage).toBe(0);
       expect(result.isHighRisk).toBe(false);
+      expect(result.triggeredRules).toEqual([]);
     });
 
     it('should add score for high amount', () => {
@@ -28,6 +29,7 @@ describe('FraudService', () => {
       expect(result.fraudScore).toBe(FRAUD_SCORING.HIGH_AMOUNT_SCORE);
       expect(result.riskPercentage).toBe(FRAUD_SCORING.HIGH_AMOUNT_SCORE * 100);
       expect(result.isHighRisk).toBe(false);
+      expect(result.triggeredRules).toEqual(['High Amount']);
     });
 
     it('should add score for risky email domain (.ru)', () => {
@@ -36,6 +38,7 @@ describe('FraudService', () => {
       expect(result.fraudScore).toBe(FRAUD_SCORING.RISKY_DOMAIN_SCORE);
       expect(result.riskPercentage).toBe(FRAUD_SCORING.RISKY_DOMAIN_SCORE * 100);
       expect(result.isHighRisk).toBe(false);
+      expect(result.triggeredRules).toEqual(['Suspicious Email Domain']);
     });
 
     it('should add score for risky email domain (.xyz)', () => {
@@ -44,6 +47,7 @@ describe('FraudService', () => {
       expect(result.fraudScore).toBe(FRAUD_SCORING.RISKY_DOMAIN_SCORE);
       expect(result.riskPercentage).toBe(FRAUD_SCORING.RISKY_DOMAIN_SCORE * 100);
       expect(result.isHighRisk).toBe(false);
+      expect(result.triggeredRules).toEqual(['Suspicious Email Domain']);
     });
 
     it('should add score for non-standard currency', () => {
@@ -52,6 +56,7 @@ describe('FraudService', () => {
       expect(result.fraudScore).toBe(FRAUD_SCORING.NON_STANDARD_CURRENCY_SCORE);
       expect(result.riskPercentage).toBe(FRAUD_SCORING.NON_STANDARD_CURRENCY_SCORE * 100);
       expect(result.isHighRisk).toBe(false);
+      expect(result.triggeredRules).toEqual(['Unsupported Currency']);
     });
 
     it('should not add score for standard currencies', () => {
@@ -60,6 +65,7 @@ describe('FraudService', () => {
         const result = FraudService.calculateFraudScore(standardCurrencyData);
         expect(result.fraudScore).toBe(0);
         expect(result.isHighRisk).toBe(false);
+        expect(result.triggeredRules).toEqual([]);
       });
     });
 
@@ -77,6 +83,7 @@ describe('FraudService', () => {
       expect(result.fraudScore).toBe(expectedScore);
       expect(result.riskPercentage).toBe(expectedScore * 100);
       expect(result.isHighRisk).toBe(true);
+      expect(result.triggeredRules).toEqual(['High Amount', 'Suspicious Email Domain', 'Unsupported Currency']);
     });
 
     it('should mark as high risk when score >= 0.5', () => {
@@ -89,6 +96,7 @@ describe('FraudService', () => {
       const expectedScore = FRAUD_SCORING.HIGH_AMOUNT_SCORE + FRAUD_SCORING.RISKY_DOMAIN_SCORE;
       expect(result.fraudScore).toBe(expectedScore);
       expect(result.isHighRisk).toBe(true);
+      expect(result.triggeredRules).toEqual(['High Amount', 'Suspicious Email Domain']);
     });
 
     it('should handle case-insensitive email domains', () => {
@@ -96,6 +104,7 @@ describe('FraudService', () => {
       const result = FraudService.calculateFraudScore(riskyEmailData);
       expect(result.fraudScore).toBe(FRAUD_SCORING.RISKY_DOMAIN_SCORE);
       expect(result.isHighRisk).toBe(false);
+      expect(result.triggeredRules).toEqual(['Suspicious Email Domain']);
     });
 
     it('should handle invalid email format gracefully', () => {
@@ -103,6 +112,7 @@ describe('FraudService', () => {
       const result = FraudService.calculateFraudScore(invalidEmailData);
       expect(result.fraudScore).toBe(0);
       expect(result.isHighRisk).toBe(false);
+      expect(result.triggeredRules).toEqual([]);
     });
   });
 }); 

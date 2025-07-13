@@ -11,6 +11,7 @@ export interface ChargeResponse {
   error?: string;
   fraudScore?: number;
   riskPercentage?: number;
+  explanation?: string;
 }
 
 export interface ValidationResult {
@@ -22,4 +23,5 @@ export interface FraudScoreResult {
   fraudScore: number;
   riskPercentage: number;
   isHighRisk: boolean;
+  triggeredRules: string[];
 } 
