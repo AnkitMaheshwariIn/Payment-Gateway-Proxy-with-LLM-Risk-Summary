@@ -76,6 +76,12 @@ The system calculates a fraud score based on risk factors:
 - **System Prompt**: Fraud detection expert persona
 - **Fallback**: Automatic fallback explanations if API unavailable
 
+**Health Checks:**
+- **Startup Validation**: Tests OpenAI API connection on server startup
+- **Environment Validation**: Verifies required environment variables
+- **API Connectivity**: Validates network connectivity and API key
+- **Graceful Degradation**: Server starts even if some services are unhealthy
+
 **Success Response (200):**
 ```json
 {
@@ -146,6 +152,23 @@ The system calculates a fraud score based on risk factors:
    ```bash
    npm run dev
    ```
+   
+   The server will perform health checks on startup and display the results:
+   ```
+   🚀 Starting Payment Gateway Proxy Server...
+   🔍 Performing health checks...
+   
+   🔍 Health Check Results:
+   ==================================================
+   ✅ OpenAI API: HEALTHY
+      Successfully connected to OpenAI API (gpt-3.5-turbo)
+   ==================================================
+   ✅ Overall Status: HEALTHY
+   ⏰ Timestamp: 2024-01-01T00:00:00.000Z
+   
+   ✅ Server is running on port 3000
+   🎉 All services are healthy! Server is ready to handle requests.
+   ```
 
 4. **Build for production:**
    ```bash
@@ -172,6 +195,7 @@ The system calculates a fraud score based on risk factors:
 - `charge.service.ts` - Static class containing business logic for charge processing
 - `fraud.service.ts` - Static class containing fraud detection and scoring logic
 - `llm.service.ts` - Static class containing OpenAI integration for natural language explanations
+- `health.service.ts` - Static class containing health checks and dependency validation
 
 ### Controllers (`src/controllers/`)
 - `charge.controller.ts` - HTTP request/response handling for charge operations
