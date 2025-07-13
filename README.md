@@ -25,6 +25,7 @@ src/
 - **TypeScript** - Full type safety and IntelliSense support
 - **Comprehensive Testing** - Unit and integration tests
 - **Validation Service** - Reusable validation logic
+- **In-Memory Transaction Logging** - Logged each charge with transactionId and timestamp
 
 ## API Endpoints
 
@@ -81,6 +82,13 @@ The system calculates a fraud score based on risk factors:
 - **Environment Validation**: Verifies required environment variables
 - **API Connectivity**: Validates network connectivity and API key
 - **Graceful Degradation**: Server starts even if some services are unhealthy
+
+**🧾 In-Memory Transaction Logging:**
+- **Automatic Logging**: Each charge request is automatically logged with unique transactionId
+- **Complete Data**: Stores amount, email, currency, source, fraud score, decision, and LLM explanation
+- **Timestamp Tracking**: ISO format timestamps for audit trail
+- **In-Memory Storage**: Simple array-based storage (no external database required)
+- **Decision Tracking**: Records whether transaction was "approved" or "blocked" based on fraud score
 
 **Success Response (200):**
 ```json
@@ -205,6 +213,9 @@ The system calculates a fraud score based on risk factors:
 
 ### Constants (`src/constants/`)
 - `app.constants.ts` - Application constants (payment sources, validation rules, server config, response status, LLM configuration)
+
+### Transaction Logging (`src/`)
+- `transactionLog.ts` - In-memory transaction logging with UUID generation and timestamp tracking
 
 ## Testing
 

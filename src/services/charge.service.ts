@@ -3,6 +3,7 @@ import { ValidationService } from './validation.service';
 import { FraudService } from './fraud.service';
 import { LLMService } from './llm.service';
 import { RESPONSE_STATUS } from '../constants/app.constants';
+import { logTransaction } from '../transactionLog';
 
 export class ChargeService {
   public static async processCharge(chargeData: ChargeRequest): Promise<ChargeResponse> {
@@ -53,6 +54,20 @@ export class ChargeService {
       fraudResult.fraudScore,
       fraudResult.triggeredRules
     );
+
+    // Determine decision based on fraud score
+    const decision = fraudResult.fraudScore >= 0.5 ? 'blocked' : 'approved';
+
+    // Log the transaction
+    logTransaction({
+      amount: chargeData.amount,
+      currency: chargeData.currency,
+      source: chargeData.source,
+      email: chargeData.email,
+      fraudScore: fraudResult.fraudScore,
+      decision,
+      llmExplanation: explanation
+    });
 
     // If all validations pass, return success with fraud score and explanation
     return {
