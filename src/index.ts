@@ -1,3 +1,7 @@
+import dotenv from 'dotenv';
+// Load environment variables from .env file
+dotenv.config();
+
 import express, { Request, Response } from 'express';
 import chargeRoutes from './routes/charge.routes';
 import { SERVER_CONFIG, RESPONSE_STATUS } from './constants/app.constants';
