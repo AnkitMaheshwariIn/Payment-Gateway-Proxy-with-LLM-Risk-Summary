@@ -16,12 +16,11 @@ describe('POST /charge', () => {
       .send(validChargeData)
       .expect(200);
 
-    expect(response.body).toEqual({
-      status: RESPONSE_STATUS.SAFE,
-      data: validChargeData,
-      fraudScore: 0,
-      riskPercentage: 0
-    });
+    expect(response.body.status).toBe(RESPONSE_STATUS.SAFE);
+    expect(response.body.data).toEqual(validChargeData);
+    expect(response.body.fraudScore).toBe(0);
+    expect(response.body.riskPercentage).toBe(0);
+    expect(typeof response.body.explanation).toBe('string');
   });
 
   it('should return 400 for invalid amount (negative)', async () => {
@@ -56,7 +55,7 @@ describe('POST /charge', () => {
 
     expect(response.body).toEqual({
       status: RESPONSE_STATUS.ERROR,
-      error: 'Currency must be a 3-letter string (e.g., \'USD\')'
+      error: 'Currency must be a 3-letter uppercase string (e.g., \'USD\')'
     });
   });
 
@@ -68,7 +67,7 @@ describe('POST /charge', () => {
 
     expect(response.body).toEqual({
       status: RESPONSE_STATUS.ERROR,
-      error: 'Currency must be a 3-letter string (e.g., \'USD\')'
+      error: 'Currency must be a 3-letter uppercase string (e.g., \'USD\')'
     });
   });
 
@@ -102,10 +101,11 @@ describe('POST /charge', () => {
       .send({ ...validChargeData, source: PAYMENT_SOURCES.PAYPAL })
       .expect(200);
 
-    expect(response.body).toEqual({
-      status: RESPONSE_STATUS.VALID,
-      data: { ...validChargeData, source: PAYMENT_SOURCES.PAYPAL }
-    });
+    expect(response.body.status).toBe(RESPONSE_STATUS.SAFE);
+    expect(response.body.data).toEqual({ ...validChargeData, source: PAYMENT_SOURCES.PAYPAL });
+    expect(response.body.fraudScore).toBe(0);
+    expect(response.body.riskPercentage).toBe(0);
+    expect(typeof response.body.explanation).toBe('string');
   });
 
   it('should accept different currencies', async () => {
@@ -114,12 +114,11 @@ describe('POST /charge', () => {
       .send({ ...validChargeData, currency: 'EUR' })
       .expect(200);
 
-    expect(response.body).toEqual({
-      status: RESPONSE_STATUS.SAFE,
-      data: { ...validChargeData, currency: 'EUR' },
-      fraudScore: 0,
-      riskPercentage: 0
-    });
+    expect(response.body.status).toBe(RESPONSE_STATUS.SAFE);
+    expect(response.body.data).toEqual({ ...validChargeData, currency: 'EUR' });
+    expect(response.body.fraudScore).toBe(0);
+    expect(response.body.riskPercentage).toBe(0);
+    expect(typeof response.body.explanation).toBe('string');
   });
 
   // Fraud scoring tests
@@ -139,7 +138,8 @@ describe('POST /charge', () => {
       status: RESPONSE_STATUS.ERROR,
       error: 'High risk',
       fraudScore: 0.7,
-      riskPercentage: 70
+      riskPercentage: 70,
+      explanation: expect.any(String)
     });
   });
 
@@ -154,12 +154,11 @@ describe('POST /charge', () => {
       .send(mediumRiskData)
       .expect(200);
 
-    expect(response.body).toEqual({
-      status: RESPONSE_STATUS.SAFE,
-      data: mediumRiskData,
-      fraudScore: 0.3,
-      riskPercentage: 30
-    });
+    expect(response.body.status).toBe(RESPONSE_STATUS.SAFE);
+    expect(response.body.data).toEqual(mediumRiskData);
+    expect(response.body.fraudScore).toBeCloseTo(0.3);
+    expect(response.body.riskPercentage).toBe(30);
+    expect(typeof response.body.explanation).toBe('string');
   });
 
   it('should return 403 for high-risk transaction (risky domain + non-standard currency)', async () => {
@@ -174,12 +173,11 @@ describe('POST /charge', () => {
       .send(highRiskData)
       .expect(403);
 
-    expect(response.body).toEqual({
-      status: RESPONSE_STATUS.ERROR,
-      error: 'High risk',
-      fraudScore: 0.6,
-      riskPercentage: 60
-    });
+    expect(response.body.status).toBe(RESPONSE_STATUS.ERROR);
+    expect(response.body.error).toBe('High risk');
+    expect(response.body.fraudScore).toBeCloseTo(0.6);
+    expect(response.body.riskPercentage).toBe(60);
+    expect(typeof response.body.explanation).toBe('string');
   });
 
   it('should return 200 for safe transaction with some risk factors', async () => {
@@ -194,11 +192,53 @@ describe('POST /charge', () => {
       .send(safeData)
       .expect(200);
 
+    expect(response.body.status).toBe(RESPONSE_STATUS.SAFE);
+    expect(response.body.data).toEqual(safeData);
+    expect(response.body.fraudScore).toBeCloseTo(0.3);
+    expect(response.body.riskPercentage).toBe(30);
+    expect(typeof response.body.explanation).toBe('string');
+  });
+
+  it('should return 403 for high-risk transaction with multiple factors', async () => {
+    const highRiskData = {
+      ...validChargeData,
+      amount: 6000,
+      email: 'test@example.ru',
+      currency: 'GBP'
+    };
+
+    const response = await request(app)
+      .post('/charge')
+      .send(highRiskData)
+      .expect(403);
+
+    expect(response.body.status).toBe(RESPONSE_STATUS.ERROR);
+    expect(response.body.error).toBe('High risk');
+    expect(response.body.fraudScore).toBeCloseTo(0.9);
+    expect(response.body.riskPercentage).toBe(90);
+    expect(typeof response.body.explanation).toBe('string');
+  });
+
+  it('should handle missing required fields', async () => {
+    const response = await request(app)
+      .post('/charge')
+      .send({})
+      .expect(400);
+
     expect(response.body).toEqual({
-      status: RESPONSE_STATUS.SAFE,
-      data: safeData,
-      fraudScore: 0.3,
-      riskPercentage: 30
+      status: RESPONSE_STATUS.ERROR,
+      error: expect.any(String)
     });
+  });
+
+  it('should handle malformed JSON', async () => {
+    const response = await request(app)
+      .post('/charge')
+      .send('invalid json')
+      .set('Content-Type', 'application/json')
+      .expect(400);
+
+    // Accept either an empty object or a generic error response
+    expect([{}, { status: RESPONSE_STATUS.ERROR, error: expect.any(String) }]).toContainEqual(response.body);
   });
 }); 

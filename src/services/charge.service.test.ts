@@ -11,45 +11,47 @@ describe('ChargeService', () => {
   };
 
   describe('processCharge', () => {
-    it('should return valid status for valid data', () => {
-      const result = ChargeService.processCharge(validChargeData);
+    it('should return valid for a valid charge', async () => {
+      const result = await ChargeService.processCharge(validChargeData);
       expect(result.status).toBe(RESPONSE_STATUS.VALID);
       expect(result.data).toEqual(validChargeData);
+      expect(result.fraudScore).toBe(0);
+      expect(result.riskPercentage).toBe(0);
+      expect(typeof result.explanation).toBe('string');
     });
 
-    it('should return error for invalid amount', () => {
-      const invalidData = { ...validChargeData, amount: -50 };
-      const result = ChargeService.processCharge(invalidData);
+    it('should return error for invalid amount', async () => {
+      const result = await ChargeService.processCharge({ ...validChargeData, amount: -50 });
       expect(result.status).toBe(RESPONSE_STATUS.ERROR);
       expect(result.error).toBe('Amount must be a positive number');
     });
 
-    it('should return error for invalid currency', () => {
-      const invalidData = { ...validChargeData, currency: 'usd' };
-      const result = ChargeService.processCharge(invalidData);
+    it('should return error for invalid currency', async () => {
+      const result = await ChargeService.processCharge({ ...validChargeData, currency: 'US' });
       expect(result.status).toBe(RESPONSE_STATUS.ERROR);
-      expect(result.error).toBe('Currency must be a 3-letter string (e.g., \'USD\')');
+      expect(result.error).toBe('Currency must be a 3-letter uppercase string (e.g., \'USD\')');
     });
 
-    it('should return error for invalid source', () => {
-      const invalidData = { ...validChargeData, source: 'square' };
-      const result = ChargeService.processCharge(invalidData);
+    it('should return error for invalid source', async () => {
+      const result = await ChargeService.processCharge({ ...validChargeData, source: 'square' });
       expect(result.status).toBe(RESPONSE_STATUS.ERROR);
       expect(result.error).toBe(`Source must be either '${PAYMENT_SOURCES.STRIPE}' or '${PAYMENT_SOURCES.PAYPAL}'`);
     });
 
-    it('should return error for invalid email', () => {
-      const invalidData = { ...validChargeData, email: 'invalid-email' };
-      const result = ChargeService.processCharge(invalidData);
+    it('should return error for invalid email', async () => {
+      const result = await ChargeService.processCharge({ ...validChargeData, email: 'invalid-email' });
       expect(result.status).toBe(RESPONSE_STATUS.ERROR);
       expect(result.error).toBe('Email must be a valid email format');
     });
 
-    it('should accept paypal as valid source', () => {
+    it('should return valid for paypal as source', async () => {
       const paypalData = { ...validChargeData, source: PAYMENT_SOURCES.PAYPAL };
-      const result = ChargeService.processCharge(paypalData);
+      const result = await ChargeService.processCharge(paypalData);
       expect(result.status).toBe(RESPONSE_STATUS.VALID);
       expect(result.data).toEqual(paypalData);
+      expect(result.fraudScore).toBe(0);
+      expect(result.riskPercentage).toBe(0);
+      expect(typeof result.explanation).toBe('string');
     });
   });
 }); 

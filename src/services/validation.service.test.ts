@@ -30,13 +30,13 @@ describe('ValidationService', () => {
     it('should return invalid for lowercase currency', () => {
       const result = ValidationService.validateCurrency('usd');
       expect(result.isValid).toBe(false);
-      expect(result.error).toBe('Currency must be a 3-letter string (e.g., \'USD\')');
+      expect(result.error).toBe('Currency must be a 3-letter uppercase string (e.g., \'USD\')');
     });
 
     it('should return invalid for 2-letter currency', () => {
       const result = ValidationService.validateCurrency('US');
       expect(result.isValid).toBe(false);
-      expect(result.error).toBe('Currency must be a 3-letter string (e.g., \'USD\')');
+      expect(result.error).toBe('Currency must be a 3-letter uppercase string (e.g., \'USD\')');
     });
   });
 

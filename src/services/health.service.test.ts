@@ -1,4 +1,4 @@
-import { HealthService, OverallHealthStatus, HealthCheckResult } from './health.service';
+import { HealthService, OverallHealthStatus } from './health.service';
 import { LLMService } from './llm.service';
 
 // Mock LLMService

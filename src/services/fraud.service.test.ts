@@ -1,118 +1,180 @@
 import { FraudService } from './fraud.service';
 import { ChargeRequest } from '../interfaces/charge.interface';
-import { 
-  FRAUD_SCORING, 
-  RISKY_DOMAINS, 
-  STANDARD_CURRENCIES 
-} from '../constants/app.constants';
+import { FRAUD_SCORING, RISKY_DOMAINS, STANDARD_CURRENCIES } from '../constants/app.constants';
 
 describe('FraudService', () => {
-  const baseChargeData: ChargeRequest = {
-    amount: 100,
-    currency: 'USD',
-    source: 'stripe',
-    email: 'test@example.com'
-  };
-
   describe('calculateFraudScore', () => {
-    it('should return 0 score for low-risk transaction', () => {
+    const baseChargeData: ChargeRequest = {
+      amount: 100,
+      currency: 'USD',
+      source: 'stripe',
+      email: 'test@example.com'
+    };
+
+    it('should return score 0 for clean input', () => {
       const result = FraudService.calculateFraudScore(baseChargeData);
+
       expect(result.fraudScore).toBe(0);
       expect(result.riskPercentage).toBe(0);
       expect(result.isHighRisk).toBe(false);
       expect(result.triggeredRules).toEqual([]);
     });
 
-    it('should add score for high amount', () => {
-      const highAmountData = { ...baseChargeData, amount: 6000 };
+    it('should add 0.3 for high amount (>5000)', () => {
+      const highAmountData: ChargeRequest = {
+        ...baseChargeData,
+        amount: 6000
+      };
+
       const result = FraudService.calculateFraudScore(highAmountData);
+
       expect(result.fraudScore).toBe(FRAUD_SCORING.HIGH_AMOUNT_SCORE);
-      expect(result.riskPercentage).toBe(FRAUD_SCORING.HIGH_AMOUNT_SCORE * 100);
+      expect(result.riskPercentage).toBe(30);
       expect(result.isHighRisk).toBe(false);
       expect(result.triggeredRules).toEqual(['High Amount']);
     });
 
-    it('should add score for risky email domain (.ru)', () => {
-      const riskyEmailData = { ...baseChargeData, email: 'test@example.ru' };
-      const result = FraudService.calculateFraudScore(riskyEmailData);
+    it('should add 0.4 for risky email domains (.ru)', () => {
+      const riskyDomainData: ChargeRequest = {
+        ...baseChargeData,
+        email: 'test@example.ru'
+      };
+
+      const result = FraudService.calculateFraudScore(riskyDomainData);
+
       expect(result.fraudScore).toBe(FRAUD_SCORING.RISKY_DOMAIN_SCORE);
-      expect(result.riskPercentage).toBe(FRAUD_SCORING.RISKY_DOMAIN_SCORE * 100);
+      expect(result.riskPercentage).toBe(40);
       expect(result.isHighRisk).toBe(false);
       expect(result.triggeredRules).toEqual(['Suspicious Email Domain']);
     });
 
-    it('should add score for risky email domain (.xyz)', () => {
-      const riskyEmailData = { ...baseChargeData, email: 'test@example.xyz' };
-      const result = FraudService.calculateFraudScore(riskyEmailData);
+    it('should add 0.4 for risky email domains (.xyz)', () => {
+      const riskyDomainData: ChargeRequest = {
+        ...baseChargeData,
+        email: 'test@example.xyz'
+      };
+
+      const result = FraudService.calculateFraudScore(riskyDomainData);
+
       expect(result.fraudScore).toBe(FRAUD_SCORING.RISKY_DOMAIN_SCORE);
-      expect(result.riskPercentage).toBe(FRAUD_SCORING.RISKY_DOMAIN_SCORE * 100);
+      expect(result.riskPercentage).toBe(40);
       expect(result.isHighRisk).toBe(false);
       expect(result.triggeredRules).toEqual(['Suspicious Email Domain']);
     });
 
-    it('should add score for non-standard currency', () => {
-      const nonStandardCurrencyData = { ...baseChargeData, currency: 'GBP' };
-      const result = FraudService.calculateFraudScore(nonStandardCurrencyData);
+    it('should add 0.2 for unsupported currency', () => {
+      const unsupportedCurrencyData: ChargeRequest = {
+        ...baseChargeData,
+        currency: 'GBP'
+      };
+
+      const result = FraudService.calculateFraudScore(unsupportedCurrencyData);
+
       expect(result.fraudScore).toBe(FRAUD_SCORING.NON_STANDARD_CURRENCY_SCORE);
-      expect(result.riskPercentage).toBe(FRAUD_SCORING.NON_STANDARD_CURRENCY_SCORE * 100);
+      expect(result.riskPercentage).toBe(20);
       expect(result.isHighRisk).toBe(false);
       expect(result.triggeredRules).toEqual(['Unsupported Currency']);
     });
 
-    it('should not add score for standard currencies', () => {
-      STANDARD_CURRENCIES.forEach(currency => {
-        const standardCurrencyData = { ...baseChargeData, currency };
-        const result = FraudService.calculateFraudScore(standardCurrencyData);
-        expect(result.fraudScore).toBe(0);
-        expect(result.isHighRisk).toBe(false);
-        expect(result.triggeredRules).toEqual([]);
-      });
-    });
-
     it('should combine multiple risk factors', () => {
-      const highRiskData = {
+      const multipleRiskData: ChargeRequest = {
         ...baseChargeData,
         amount: 6000,
         email: 'test@example.ru',
         currency: 'GBP'
       };
-      const result = FraudService.calculateFraudScore(highRiskData);
+
+      const result = FraudService.calculateFraudScore(multipleRiskData);
+
       const expectedScore = FRAUD_SCORING.HIGH_AMOUNT_SCORE + 
                            FRAUD_SCORING.RISKY_DOMAIN_SCORE + 
                            FRAUD_SCORING.NON_STANDARD_CURRENCY_SCORE;
+      
       expect(result.fraudScore).toBe(expectedScore);
-      expect(result.riskPercentage).toBe(expectedScore * 100);
+      expect(result.riskPercentage).toBe(90);
       expect(result.isHighRisk).toBe(true);
-      expect(result.triggeredRules).toEqual(['High Amount', 'Suspicious Email Domain', 'Unsupported Currency']);
+      expect(result.triggeredRules).toEqual([
+        'High Amount',
+        'Suspicious Email Domain',
+        'Unsupported Currency'
+      ]);
+    });
+
+    it('should handle case-insensitive email domain matching', () => {
+      const mixedCaseData: ChargeRequest = {
+        ...baseChargeData,
+        email: 'test@EXAMPLE.RU'
+      };
+
+      const result = FraudService.calculateFraudScore(mixedCaseData);
+
+      expect(result.fraudScore).toBe(FRAUD_SCORING.RISKY_DOMAIN_SCORE);
+      expect(result.triggeredRules).toEqual(['Suspicious Email Domain']);
+    });
+
+    it('should handle email without domain gracefully', () => {
+      const invalidEmailData: ChargeRequest = {
+        ...baseChargeData,
+        email: 'test@'
+      };
+
+      const result = FraudService.calculateFraudScore(invalidEmailData);
+
+      expect(result.fraudScore).toBe(0);
+      expect(result.triggeredRules).toEqual([]);
     });
 
     it('should mark as high risk when score >= 0.5', () => {
-      const highRiskData = {
+      const highRiskData: ChargeRequest = {
         ...baseChargeData,
         amount: 6000,
         email: 'test@example.ru'
       };
+
       const result = FraudService.calculateFraudScore(highRiskData);
-      const expectedScore = FRAUD_SCORING.HIGH_AMOUNT_SCORE + FRAUD_SCORING.RISKY_DOMAIN_SCORE;
-      expect(result.fraudScore).toBe(expectedScore);
+
+      expect(result.fraudScore).toBe(0.7);
       expect(result.isHighRisk).toBe(true);
-      expect(result.triggeredRules).toEqual(['High Amount', 'Suspicious Email Domain']);
     });
 
-    it('should handle case-insensitive email domains', () => {
-      const riskyEmailData = { ...baseChargeData, email: 'test@EXAMPLE.RU' };
-      const result = FraudService.calculateFraudScore(riskyEmailData);
-      expect(result.fraudScore).toBe(FRAUD_SCORING.RISKY_DOMAIN_SCORE);
+    it('should not mark as high risk when score < 0.5', () => {
+      const lowRiskData: ChargeRequest = {
+        ...baseChargeData,
+        amount: 6000
+      };
+
+      const result = FraudService.calculateFraudScore(lowRiskData);
+
+      expect(result.fraudScore).toBe(0.3);
       expect(result.isHighRisk).toBe(false);
-      expect(result.triggeredRules).toEqual(['Suspicious Email Domain']);
     });
 
-    it('should handle invalid email format gracefully', () => {
-      const invalidEmailData = { ...baseChargeData, email: 'invalid-email' };
-      const result = FraudService.calculateFraudScore(invalidEmailData);
-      expect(result.fraudScore).toBe(0);
-      expect(result.isHighRisk).toBe(false);
-      expect(result.triggeredRules).toEqual([]);
+    it('should accept all standard currencies without penalty', () => {
+      STANDARD_CURRENCIES.forEach(currency => {
+        const standardCurrencyData: ChargeRequest = {
+          ...baseChargeData,
+          currency
+        };
+
+        const result = FraudService.calculateFraudScore(standardCurrencyData);
+
+        expect(result.fraudScore).toBe(0);
+        expect(result.triggeredRules).not.toContain('Unsupported Currency');
+      });
+    });
+
+    it('should detect all risky domains', () => {
+      RISKY_DOMAINS.forEach(domain => {
+        const riskyDomainData: ChargeRequest = {
+          ...baseChargeData,
+          email: `test@example${domain}`
+        };
+
+        const result = FraudService.calculateFraudScore(riskyDomainData);
+
+        expect(result.fraudScore).toBe(FRAUD_SCORING.RISKY_DOMAIN_SCORE);
+        expect(result.triggeredRules).toEqual(['Suspicious Email Domain']);
+      });
     });
   });
 }); 
