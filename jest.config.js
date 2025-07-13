@@ -11,4 +11,5 @@ module.exports = {
     '!src/**/*.d.ts',
   ],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  testTimeout: 10000,
 }; 

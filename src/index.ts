@@ -4,6 +4,7 @@ dotenv.config();
 
 import express, { Request, Response } from 'express';
 import chargeRoutes from './routes/charge.routes';
+import transactionsRoutes from './routes/transactions.routes';
 import { SERVER_CONFIG, RESPONSE_STATUS } from './constants/app.constants';
 import { HealthService } from './services/health.service';
 
@@ -21,6 +22,7 @@ app.get('/health', (_req: Request, res: Response) => {
 
 // Routes
 app.use('/', chargeRoutes);
+app.use('/', transactionsRoutes);
 
 /**
  * Initialize server with health checks
@@ -45,6 +47,7 @@ async function initializeServer(): Promise<void> {
       console.log(`✅ Server is running on port ${PORT}`);
       console.log(`🔗 Health check available at http://${SERVER_CONFIG.HOST}:${PORT}/health`);
       console.log(`💳 Charge endpoint available at http://${SERVER_CONFIG.HOST}:${PORT}/charge`);
+      console.log(`📊 Transactions endpoint available at http://${SERVER_CONFIG.HOST}:${PORT}/transactions`);
       
       if (healthStatus.overall === 'healthy') {
         console.log('🎉 All services are healthy! Server is ready to handle requests.');
@@ -59,7 +62,10 @@ async function initializeServer(): Promise<void> {
   }
 }
 
-// Initialize server
-initializeServer();
+// Only start server if not in test environment
+if (process.env.NODE_ENV !== 'test') {
+  initializeServer();
+}
 
-export default app; 
+export default app;
+export { initializeServer }; 
