@@ -60,6 +60,7 @@ const options: swaggerJsdoc.Options = {
             },
             data: {
               type: 'object',
+              nullable: true,
               properties: {
                 transactionId: {
                   type: 'string',
@@ -75,7 +76,7 @@ const options: swaggerJsdoc.Options = {
                 },
                 status: {
                   type: 'string',
-                  description: 'Transaction status (safe, declined, review)'
+                  description: 'Transaction status (safe, declined)'
                 },
                 fraudScore: {
                   type: 'number',

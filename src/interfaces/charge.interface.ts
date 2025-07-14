@@ -6,12 +6,17 @@ export interface ChargeRequest {
 }
 
 export interface ChargeResponse {
-  status: string;
-  data?: ChargeRequest;
-  error?: string;
-  fraudScore?: number;
-  riskPercentage?: number;
-  explanation?: string;
+  success: boolean;
+  message: string;
+  data: {
+    transactionId: string;
+    amount: number;
+    currency: string;
+    status: string;
+    fraudScore: number;
+    triggeredRules: string[];
+    llmExplanation: string;
+  } | null;
 }
 
 export interface ValidationResult {

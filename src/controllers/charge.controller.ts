@@ -9,9 +9,9 @@ export class ChargeController {
       const chargeData: ChargeRequest = req.body;
       const result = await ChargeService.processCharge(chargeData);
       
-      if (result.status === RESPONSE_STATUS.ERROR) {
+      if (!result.success) {
         // Check if it's a high risk error (which should return 403)
-        if (result.error === 'High risk') {
+        if (result.message === 'Charge declined due to high fraud risk') {
           res.status(403).json(result);
         } else {
           res.status(400).json(result);

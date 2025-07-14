@@ -1,6 +1,6 @@
 import { ChargeService } from './charge.service';
 import { ChargeRequest } from '../interfaces/charge.interface';
-import { PAYMENT_SOURCES, RESPONSE_STATUS } from '../constants/app.constants';
+import { PAYMENT_SOURCES } from '../constants/app.constants';
 
 describe('ChargeService', () => {
   const validChargeData: ChargeRequest = {
@@ -13,45 +13,55 @@ describe('ChargeService', () => {
   describe('processCharge', () => {
     it('should return safe for a valid charge', async () => {
       const result = await ChargeService.processCharge(validChargeData);
-      expect(result.status).toBe(RESPONSE_STATUS.SAFE);
-      expect(result.data).toEqual(validChargeData);
-      expect(result.fraudScore).toBeGreaterThanOrEqual(0);
-      expect(result.riskPercentage).toBeGreaterThanOrEqual(0);
-      expect(typeof result.explanation).toBe('string');
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(expect.objectContaining({
+        transactionId: expect.any(String),
+        amount: validChargeData.amount,
+        currency: validChargeData.currency,
+        status: 'safe',
+        fraudScore: expect.any(Number),
+        triggeredRules: expect.any(Array),
+        llmExplanation: expect.any(String)
+      }));
     });
 
     it('should return error for invalid amount', async () => {
       const result = await ChargeService.processCharge({ ...validChargeData, amount: -50 });
-      expect(result.status).toBe(RESPONSE_STATUS.ERROR);
-      expect(result.error).toBe('Amount must be a positive number');
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Amount must be a positive number');
     });
 
     it('should return error for invalid currency', async () => {
       const result = await ChargeService.processCharge({ ...validChargeData, currency: 'US' });
-      expect(result.status).toBe(RESPONSE_STATUS.ERROR);
-      expect(result.error).toBe('Currency must be a 3-letter uppercase string (e.g., \'USD\')');
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Currency must be a 3-letter uppercase string (e.g., \'USD\')');
     });
 
     it('should return error for invalid source', async () => {
       const result = await ChargeService.processCharge({ ...validChargeData, source: 'square' });
-      expect(result.status).toBe(RESPONSE_STATUS.ERROR);
-      expect(result.error).toBe(`Source must be either '${PAYMENT_SOURCES.STRIPE}' or '${PAYMENT_SOURCES.PAYPAL}'`);
+      expect(result.success).toBe(false);
+      expect(result.message).toBe(`Source must be either '${PAYMENT_SOURCES.STRIPE}' or '${PAYMENT_SOURCES.PAYPAL}'`);
     });
 
     it('should return error for invalid email', async () => {
       const result = await ChargeService.processCharge({ ...validChargeData, email: 'invalid-email' });
-      expect(result.status).toBe(RESPONSE_STATUS.ERROR);
-      expect(result.error).toBe('Email must be a valid email format');
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Email must be a valid email format');
     });
 
     it('should return safe for paypal as source', async () => {
       const paypalData = { ...validChargeData, source: PAYMENT_SOURCES.PAYPAL };
       const result = await ChargeService.processCharge(paypalData);
-      expect(result.status).toBe(RESPONSE_STATUS.SAFE);
-      expect(result.data).toEqual(paypalData);
-      expect(result.fraudScore).toBeGreaterThanOrEqual(0);
-      expect(result.riskPercentage).toBeGreaterThanOrEqual(0);
-      expect(typeof result.explanation).toBe('string');
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(expect.objectContaining({
+        transactionId: expect.any(String),
+        amount: paypalData.amount,
+        currency: paypalData.currency,
+        status: 'safe',
+        fraudScore: expect.any(Number),
+        triggeredRules: expect.any(Array),
+        llmExplanation: expect.any(String)
+      }));
     });
   });
 }); 

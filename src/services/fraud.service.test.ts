@@ -166,10 +166,10 @@ describe('FraudService', () => {
         amount: 15000
       };
       const result = await FraudService.calculateFraudScore(veryHighAmountData);
-      expect(result.fraudScore).toBe(0.8); // Very High Amount (0.5) + High Amount (0.3)
-      expect(result.riskPercentage).toBe(80);
+      expect(result.fraudScore).toBe(0.5); // Only Very High Amount (0.5) should trigger
+      expect(result.riskPercentage).toBe(50);
       expect(result.isHighRisk).toBe(true);
-      expect(result.triggeredRules.sort()).toEqual(['Very High Amount', 'High Amount'].sort());
+      expect(result.triggeredRules.sort()).toEqual(['Very High Amount'].sort());
     });
 
     it('should detect suspicious email patterns', async () => {

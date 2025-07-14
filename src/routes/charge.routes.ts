@@ -60,9 +60,9 @@ const router = Router();
  *                     amount: 99.99
  *                     currency: "USD"
  *                     status: "safe"
- *                     fraudScore: 15.5
- *                     triggeredRules: ["high_amount"]
- *                     llmExplanation: "This transaction appears safe with moderate risk factors."
+ *                     fraudScore: 15
+ *                     triggeredRules: []
+ *                     llmExplanation: "This transaction appears safe with no significant risk factors."
  *               declined_transaction:
  *                 summary: High-risk transaction declined
  *                 value:
@@ -73,7 +73,7 @@ const router = Router();
  *                     amount: 5000.00
  *                     currency: "USD"
  *                     status: "declined"
- *                     fraudScore: 85.2
+ *                     fraudScore: 85
  *                     triggeredRules: ["high_amount", "suspicious_email"]
  *                     llmExplanation: "This transaction shows multiple high-risk indicators and should be declined."
  *       400:

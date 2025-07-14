@@ -2,7 +2,6 @@ import { ChargeRequest, ChargeResponse } from '../interfaces/charge.interface';
 import { ValidationService } from './validation.service';
 import { FraudService } from './fraud.service';
 import { LLMService } from './llm.service';
-import { RESPONSE_STATUS } from '../constants/app.constants';
 import { logTransaction } from '../transactionLog';
 
 export class ChargeService {
@@ -12,8 +11,9 @@ export class ChargeService {
       const amountValidation = ValidationService.validateAmount(chargeData.amount);
       if (!amountValidation.isValid) {
         return {
-          status: RESPONSE_STATUS.ERROR,
-          error: amountValidation.error
+          success: false,
+          message: amountValidation.error || 'Invalid amount',
+          data: null
         };
       }
 
@@ -21,8 +21,9 @@ export class ChargeService {
       const currencyValidation = ValidationService.validateCurrency(chargeData.currency);
       if (!currencyValidation.isValid) {
         return {
-          status: RESPONSE_STATUS.ERROR,
-          error: currencyValidation.error
+          success: false,
+          message: currencyValidation.error || 'Invalid currency',
+          data: null
         };
       }
 
@@ -30,8 +31,9 @@ export class ChargeService {
       const sourceValidation = ValidationService.validateSource(chargeData.source);
       if (!sourceValidation.isValid) {
         return {
-          status: RESPONSE_STATUS.ERROR,
-          error: sourceValidation.error
+          success: false,
+          message: sourceValidation.error || 'Invalid source',
+          data: null
         };
       }
 
@@ -39,8 +41,9 @@ export class ChargeService {
       const emailValidation = ValidationService.validateEmail(chargeData.email);
       if (!emailValidation.isValid) {
         return {
-          status: RESPONSE_STATUS.ERROR,
-          error: emailValidation.error
+          success: false,
+          message: emailValidation.error || 'Invalid email',
+          data: null
         };
       }
 
@@ -59,8 +62,8 @@ export class ChargeService {
       // Determine decision based on fraud score
       const decision = fraudResult.fraudScore >= 0.5 ? 'blocked' : 'approved';
 
-      // Log the transaction
-      logTransaction({
+      // Log the transaction and get the transactionId
+      const transaction = logTransaction({
         amount: chargeData.amount,
         currency: chargeData.currency,
         source: chargeData.source,
@@ -69,31 +72,40 @@ export class ChargeService {
         decision,
         llmExplanation: explanation
       });
+      const transactionId = transaction.transactionId;
+
+      // Build the data object for the response
+      const data = {
+        transactionId,
+        amount: chargeData.amount,
+        currency: chargeData.currency,
+        status: decision === 'blocked' ? 'declined' : 'safe',
+        fraudScore: Math.round(fraudResult.fraudScore * 100),
+        triggeredRules: fraudResult.triggeredRules,
+        llmExplanation: explanation
+      };
 
       // Check if transaction is high risk
       if (fraudResult.isHighRisk) {
         return {
-          status: RESPONSE_STATUS.ERROR,
-          error: 'High risk',
-          fraudScore: fraudResult.fraudScore,
-          riskPercentage: fraudResult.riskPercentage,
-          explanation
+          success: false,
+          message: 'Charge declined due to high fraud risk',
+          data
         };
       }
 
       // If all validations pass, return success with fraud score and explanation
       return {
-        status: RESPONSE_STATUS.SAFE,
-        data: chargeData,
-        fraudScore: fraudResult.fraudScore,
-        riskPercentage: fraudResult.riskPercentage,
-        explanation
+        success: true,
+        message: 'Charge processed successfully',
+        data
       };
     } catch (error) {
       console.error('❌ Error processing charge:', error);
       return {
-        status: RESPONSE_STATUS.ERROR,
-        error: 'Internal server error'
+        success: false,
+        message: 'Internal server error',
+        data: null
       };
     }
   }
