@@ -1,7 +1,7 @@
 
 # Payment Gateway Proxy with LLM Risk Summary
 
-A Node.js + TypeScript payment gateway proxy service with comprehensive validation and class-based architecture.
+A Node.js + TypeScript payment gateway proxy service with comprehensive fraud detection, LLM-powered risk analysis, and class-based architecture.
 
 ## Architecture
 
@@ -14,19 +14,26 @@ src/
 ├── controllers/        # HTTP request/response handlers
 ├── routes/            # Express route definitions
 ├── constants/          # Application constants and configuration
+├── config/            # JSON configuration files for fraud rules, currencies, etc.
+├── utils/             # Utility functions and Swagger documentation
 └── index.ts           # Main application entry point
 ```
 
 ## 🚀 Features
 
-- **POST /charge** - Payment validation endpoint with comprehensive field validation
+- **POST /charge** - Payment processing with fraud detection and LLM risk analysis
 - **GET /health** - Health check endpoint
 - **GET /transactions** - Retrieve all stored transactions with audit trail
+- **DELETE /cache/clear** - Clear LLM explanation cache
+- **GET /cache/stats** - Get cache statistics
+- **GET /docs** - Interactive API documentation (Swagger UI)
 - **Class-based Architecture** - Clean separation of concerns
 - **TypeScript** - Full type safety and IntelliSense support
-- **Comprehensive Testing** - Unit and integration tests
-- **Validation Service** - Reusable validation logic
-- **In-Memory Transaction Logging** - Logged each charge with transactionId and timestamp
+- **Comprehensive Testing** - Unit and integration tests with 80+ test cases
+- **Fraud Detection** - Configurable fraud rules with risk scoring
+- **LLM Integration** - OpenAI GPT-3.5-turbo for natural language risk explanations
+- **In-Memory Transaction Logging** - Complete audit trail with transactionId and timestamps
+- **Cache Management** - In-memory caching for LLM explanations to reduce API calls
 
 ## ⚙️ Configuration Files
 
@@ -37,7 +44,7 @@ The application uses JSON configuration files for easy maintenance and updates w
 - Each rule contains:
   - `label`: Human-readable description
   - `condition`: JavaScript expression as a string (evaluated at runtime)
-  - `score`: Numeric value added to fraud score if rule triggers
+  - `score`: Numeric value added to fraud score if rule triggers (0.0 to 1.0)
 - Rules are loaded and evaluated dynamically for each charge
 - Easily maintain and update risk logic by editing the JSON file—no code changes required
 
@@ -77,6 +84,35 @@ Health check endpoint that returns server status.
 ### GET /transactions
 Returns all stored transactions from the in-memory transaction log.
 
+**Response:**
+```json
+{
+  "status": "ok",
+  "data": {
+    "transactions": [
+      {
+        "transactionId": "uuid-string",
+        "timestamp": "2024-01-01T00:00:00.000Z",
+        "amount": 100,
+        "currency": "USD",
+        "source": "stripe",
+        "email": "user@example.com",
+        "fraudScore": 0.3,
+        "decision": "approved",
+        "llmExplanation": "Transaction flagged as medium risk due to high transaction amount."
+      }
+    ],
+    "count": 1
+  }
+}
+```
+
+**Features:**
+- Returns all transactions stored in memory
+- Includes transaction count for easy pagination planning
+- Each transaction contains complete audit trail data
+- Transactions are returned in chronological order (oldest first)
+
 ### DELETE /cache/clear
 Clears the in-memory cache of LLM-generated fraud explanations.
 
@@ -107,37 +143,15 @@ Returns current statistics about the LLM explanation cache.
 }
 ```
 
-**Response:**
-```json
-{
-  "status": "ok",
-  "data": {
-    "transactions": [
-      {
-        "transactionId": "uuid-string",
-        "timestamp": "2024-01-01T00:00:00.000Z",
-        "amount": 100,
-        "currency": "USD",
-        "source": "stripe",
-        "email": "user@example.com",
-        "fraudScore": 0.3,
-        "decision": "approved",
-        "llmExplanation": "Transaction flagged as medium risk due to high transaction amount."
-      }
-    ],
-    "count": 1
-  }
-}
-```
-
-**Features:**
-- Returns all transactions stored in memory
-- Includes transaction count for easy pagination planning
-- Each transaction contains complete audit trail data
-- Transactions are returned in chronological order (oldest first)
+### GET /docs
+Interactive API documentation powered by Swagger UI.
+- Complete API reference with examples
+- Try out endpoints directly from the browser
+- Detailed request/response schemas
+- Available at `http://localhost:3000/docs`
 
 ### POST /charge
-Validates payment charge data with comprehensive field validation.
+Processes payment charge data with comprehensive fraud detection and LLM risk analysis.
 
 **Request Body:**
 ```json
@@ -156,15 +170,17 @@ Validates payment charge data with comprehensive field validation.
 - `email`: Must be a valid email format
 
 **Fraud Scoring:**
-The system calculates a fraud score based on risk factors:
+The system calculates a fraud score (0.0 to 1.0) based on configurable risk factors:
 - **High Amount**: +0.3 points if amount > $5,000
+- **Very High Amount**: +0.5 points if amount > $10,000 (mutually exclusive with High Amount)
 - **Risky Domain**: +0.4 points if email ends with .ru or .xyz
 - **Non-Standard Currency**: +0.2 points if currency is not USD, EUR, or INR
+- **Suspicious Email Pattern**: +0.1 points for test/temp emails
+- **Non-Standard Payment Source**: +0.3 points for non-standard sources
 
 **Risk Assessment:**
 - **Low Risk** (score < 0.5): Returns 200 with "safe" status
-- **High Risk** (score ≥ 0.5): Returns 403 with "High risk" error
-- **Risk Percentage**: Calculated as (fraudScore × 100)%
+- **High Risk** (score ≥ 0.5): Returns 403 with "declined" status
 - **LLM Explanation**: Natural language explanation of risk factors using OpenAI GPT-3.5-turbo
 
 **LLM Configuration:**
@@ -172,6 +188,7 @@ The system calculates a fraud score based on risk factors:
 - **Max Tokens**: 150 for concise explanations
 - **Temperature**: 0.3 for consistent, professional output
 - **System Prompt**: Fraud detection expert persona
+- **Caching**: In-memory cache to avoid redundant API calls
 - **Fallback**: Automatic fallback explanations if API unavailable
 
 **Health Checks:**
@@ -190,35 +207,43 @@ The system calculates a fraud score based on risk factors:
 **Success Response (200):**
 ```json
 {
-  "status": "safe",
+  "success": true,
+  "message": "Charge processed successfully",
   "data": {
+    "transactionId": "uuid-string",
     "amount": 100,
     "currency": "USD",
-    "source": "stripe",
-    "email": "user@example.com"
-  },
-  "fraudScore": 0.3,
-  "riskPercentage": 30,
-  "explanation": "Transaction flagged as medium risk due to high transaction amount."
+    "status": "safe",
+    "fraudScore": 0.3,
+    "triggeredRules": ["high_amount"],
+    "llmExplanation": "Transaction flagged as medium risk due to high transaction amount."
+  }
 }
 ```
 
 **High Risk Response (403):**
 ```json
 {
-  "status": "error",
-  "error": "High risk",
-  "fraudScore": 0.7,
-  "riskPercentage": 70,
-  "explanation": "Transaction flagged as high risk due to suspicious email domain and unsupported currency."
+  "success": false,
+  "message": "Charge declined due to high fraud risk",
+  "data": {
+    "transactionId": "uuid-string",
+    "amount": 6000,
+    "currency": "USD",
+    "status": "declined",
+    "fraudScore": 0.7,
+    "triggeredRules": ["high_amount", "suspicious_email"],
+    "llmExplanation": "Transaction flagged as high risk due to suspicious email domain and high amount."
+  }
 }
 ```
 
 **Error Response (400):**
 ```json
 {
-  "status": "error",
-  "error": "Clear error message describing the validation failure"
+  "success": false,
+  "message": "Clear error message describing the validation failure",
+  "data": null
 }
 ```
 
@@ -253,7 +278,7 @@ The system calculates a fraud score based on risk factors:
    **Optional Environment Variables:**
    - `PORT`: Server port (defaults to 3000)
 
-3. **Development:**
+4. **Development:**
    ```bash
    npm run dev
    ```
@@ -273,22 +298,24 @@ The system calculates a fraud score based on risk factors:
    
    ✅ Server is running on port 3000
    🔗 Health check available at http://localhost:3000/health
+   📚 API Documentation available at http://localhost:3000/docs
    💳 Charge endpoint available at http://localhost:3000/charge
    📊 Transactions endpoint available at http://localhost:3000/transactions
+   🗑️  Cache management available at http://localhost:3000/cache/stats
    🎉 All services are healthy! Server is ready to handle requests.
    ```
 
-4. **Build for production:**
+5. **Build for production:**
    ```bash
    npm run build
    ```
 
-5. **Start production server:**
+6. **Start production server:**
    ```bash
    npm start
    ```
 
-6. **Run tests:**
+7. **Run tests:**
    ```bash
    npm test
    ```
@@ -297,6 +324,7 @@ The system calculates a fraud score based on risk factors:
 
 ### Interfaces (`src/interfaces/`)
 - `charge.interface.ts` - Type definitions for charge requests, responses, and validation results
+- `fraud.interface.ts` - Type definitions for fraud rules and scoring
 
 ### Services (`src/services/`)
 - `validation.service.ts` - Static class containing all validation logic
@@ -307,23 +335,34 @@ The system calculates a fraud score based on risk factors:
 
 ### Controllers (`src/controllers/`)
 - `charge.controller.ts` - HTTP request/response handling for charge operations
+- `transactions.controller.ts` - HTTP request/response handling for transaction retrieval
+- `cache.controller.ts` - HTTP request/response handling for cache management
 
 ### Routes (`src/routes/`)
-- `charge.routes.ts` - Express route definitions and controller mapping
+- `charge.routes.ts` - Express route definitions for charge operations with Swagger documentation
+- `transactions.routes.ts` - Express route definitions for transaction retrieval
+- `cache.routes.ts` - Express route definitions for cache management
 
 ### Constants (`src/constants/`)
 - `app.constants.ts` - Application constants (payment sources, validation rules, server config, response status, LLM configuration)
+
+### Utils (`src/utils/`)
+- `swagger.ts` - Swagger/OpenAPI documentation configuration
+- `configLoader.ts` - Utility for loading and caching JSON configuration files
 
 ### Transaction Logging (`src/`)
 - `transactionLog.ts` - In-memory transaction logging with UUID generation and timestamp tracking
 
 ## Testing
 
-The project includes comprehensive testing:
+The project includes comprehensive testing with **80+ test cases**:
 
 - **Unit Tests**: Individual service and validation logic testing
 - **Integration Tests**: End-to-end API endpoint testing
 - **Test Coverage**: Validation of all success and error scenarios
+- **Fraud Detection Tests**: Comprehensive testing of fraud scoring logic
+- **LLM Service Tests**: Testing of OpenAI integration and caching
+- **Cache Management Tests**: Testing of cache clearing and statistics
 
 Run tests with:
 ```bash
@@ -345,6 +384,8 @@ npm test
 - **Scalability**: Easy to add new features and services
 - **Type Safety**: Full TypeScript support with interfaces
 - **Reusability**: Services can be reused across different controllers
+- **Configuration-Driven**: Fraud rules and settings in JSON files
+- **API Documentation**: Auto-generated Swagger documentation
 
 ## 🚀 Getting Started
 
@@ -353,12 +394,17 @@ npm test
    npm run dev
    ```
 
-2. Test the health endpoint:
+2. View API documentation:
+   ```bash
+   open http://localhost:3000/docs
+   ```
+
+3. Test the health endpoint:
    ```bash
    curl http://localhost:3000/health
    ```
 
-3. Test the charge endpoint:
+4. Test the charge endpoint:
    ```bash
    curl -X POST http://localhost:3000/charge \
      -H "Content-Type: application/json" \
@@ -370,9 +416,14 @@ npm test
      }'
    ```
 
-4. View all transactions:
+5. View all transactions:
    ```bash
    curl http://localhost:3000/transactions
+   ```
+
+6. Check cache statistics:
+   ```bash
+   curl http://localhost:3000/cache/stats
    ```
 
 ## 🔒 License
