@@ -211,6 +211,20 @@ describe('FraudService', () => {
       expect(result1.fraudScore).toBe(result2.fraudScore);
       expect(result1.triggeredRules.sort()).toEqual(result2.triggeredRules.sort());
     });
+
+    it('should cap risk percentage at 100 and fraudScore at 1.0', async () => {
+      // This input triggers all rules
+      const allRiskData: ChargeRequest = {
+        amount: 20000, // triggers High Amount + Very High Amount
+        currency: 'JPY', // triggers Unsupported Currency
+        source: 'square', // triggers Non-Standard Payment Source
+        email: 'test@fraud.nett' // triggers Suspicious Email Domain + Suspicious Email Pattern
+      };
+      const result = await FraudService.calculateFraudScore(allRiskData);
+      expect(result.riskPercentage).toBe(100);
+      expect(result.fraudScore).toBe(1.0);
+      expect(result.isHighRisk).toBe(true);
+    });
   });
 
   describe('Rule management', () => {

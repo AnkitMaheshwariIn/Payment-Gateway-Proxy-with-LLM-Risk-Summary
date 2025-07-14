@@ -2,33 +2,33 @@
   "rules": [
     {
       "label": "High Amount",
-      "condition": "amount > 5000",
-      "score": 0.3
+      "condition": "amount > 5000 && amount <= 10000",
+      "score": 30
     },
     {
       "label": "Suspicious Email Domain",
       "condition": "isRiskyDomain(email)",
-      "score": 0.4
+      "score": 40
     },
     {
       "label": "Unsupported Currency",
       "condition": "!isSupportedCurrency(currency)",
-      "score": 0.2
+      "score": 20
     },
     {
       "label": "Very High Amount",
       "condition": "amount > 10000",
-      "score": 0.5
+      "score": 50
     },
     {
       "label": "Suspicious Email Pattern",
       "condition": "email.includes('test') && email.includes('@')",
-      "score": 0.1
+      "score": 10
     },
     {
       "label": "Non-Standard Payment Source",
       "condition": "source !== 'stripe' && source !== 'paypal'",
-      "score": 0.3
+      "score": 30
     }
   ]
 }

@@ -26,6 +26,11 @@ export class FraudService {
       const config: FraudRulesConfig = JSON.parse(configData);
       
       this.fraudRules = config.rules;
+      // Warn if the sum of all rule scores exceeds 1.0
+      const totalScore = this.fraudRules.reduce((sum, rule) => sum + rule.score, 0);
+      if (totalScore > 1.0) {
+        console.warn(`⚠️  Warning: The sum of all fraud rule scores is ${totalScore}, which exceeds 1.0. This may cause all-risk transactions to be capped at 100%. Consider adjusting your rule scores.`);
+      }
       console.log(`📋 Loaded ${this.fraudRules.length} fraud rules from configuration`);
       
       return this.fraudRules;
@@ -119,14 +124,16 @@ export class FraudService {
         const isTriggered = this.evaluateCondition(rule.condition, variables);
         
         if (isTriggered) {
-          fraudScore += rule.score;
+          fraudScore += rule.score; // now integer
           triggeredRules.push(rule.label);
           console.log(`🚨 Fraud rule triggered: ${rule.label} (score: ${rule.score})`);
         }
       }
 
-      // Calculate risk percentage (fraud score as percentage)
-      const riskPercentage = Math.round(fraudScore * 100);
+      // Cap risk percentage at 100
+      const riskPercentage = Math.min(Math.round(fraudScore), 100);
+      // Set fraudScore as a 0-1.0 value for internal use
+      fraudScore = riskPercentage / 100;
 
       // Determine if high risk
       const isHighRisk = fraudScore >= FRAUD_SCORING.HIGH_RISK_THRESHOLD;
