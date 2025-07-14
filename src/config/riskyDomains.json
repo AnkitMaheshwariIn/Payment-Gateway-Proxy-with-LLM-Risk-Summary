@@ -1,0 +1,15 @@
+{
+  "riskyDomains": [
+    ".ru",
+    ".xyz", 
+    "xyz.com", 
+    "fraud.nett",
+    "fraud.comm",
+    "temp.com",
+    "test.com",
+    "example.com",
+    "suspicious.net"
+  ],
+  "description": "List of domains that are considered risky for fraud detection",
+  "version": "1.0.0"
+} 

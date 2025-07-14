@@ -28,15 +28,39 @@ src/
 - **Validation Service** - Reusable validation logic
 - **In-Memory Transaction Logging** - Logged each charge with transactionId and timestamp
 
-## ⚙️ Configurable Fraud Rules
+## ⚙️ Configuration Files
 
-- Fraud detection heuristics are now defined in `src/config/fraudRules.json`
+The application uses JSON configuration files for easy maintenance and updates without code changes:
+
+### Fraud Rules (`src/config/fraudRules.json`)
+- Fraud detection heuristics are defined in `src/config/fraudRules.json`
 - Each rule contains:
   - `label`: Human-readable description
   - `condition`: JavaScript expression as a string (evaluated at runtime)
   - `score`: Numeric value added to fraud score if rule triggers
 - Rules are loaded and evaluated dynamically for each charge
 - Easily maintain and update risk logic by editing the JSON file—no code changes required
+
+### Risky Domains (`src/config/riskyDomains.json`)
+- List of email domains considered risky for fraud detection
+- Contains domains like `.ru`, `.xyz`, `temp.com`, etc.
+- Used for email-based risk assessment
+- Easily update the list without code changes
+
+### Supported Currencies (`src/config/currencies.json`)
+- Comprehensive list of supported payment currencies
+- Each currency includes:
+  - `code`: 3-letter currency code (e.g., "USD")
+  - `name`: Full currency name (e.g., "US Dollar")
+  - `symbol`: Currency symbol (e.g., "$")
+  - `isActive`: Whether the currency is currently supported
+- Used for currency validation and risk assessment
+- Add or remove currencies by updating the JSON file
+
+### Configuration Loading
+- All config files are automatically copied to `dist/config/` during build
+- ConfigLoader utility provides caching and error handling
+- Supports both development (src/config) and production (dist/config) paths
 
 ## API Endpoints
 

@@ -1,0 +1,36 @@
+{
+  "supportedCurrencies": [
+    {
+      "code": "USD",
+      "name": "US Dollar",
+      "symbol": "$",
+      "isActive": true
+    },
+    {
+      "code": "EUR", 
+      "name": "Euro",
+      "symbol": "€",
+      "isActive": true
+    },
+    {
+      "code": "INR",
+      "name": "Indian Rupee", 
+      "symbol": "₹",
+      "isActive": true
+    },
+    {
+      "code": "GBP",
+      "name": "British Pound",
+      "symbol": "£",
+      "isActive": true
+    },
+    {
+      "code": "CAD",
+      "name": "Canadian Dollar",
+      "symbol": "C$",
+      "isActive": true
+    }
+  ],
+  "description": "List of supported currencies for payment processing",
+  "version": "1.0.0"
+} 

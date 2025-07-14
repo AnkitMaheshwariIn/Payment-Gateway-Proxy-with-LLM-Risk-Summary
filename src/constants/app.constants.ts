@@ -51,9 +51,7 @@ export const FRAUD_SCORING = {
   HIGH_RISK_THRESHOLD: 0.5
 } as const;
 
-export const RISKY_DOMAINS = ['.ru', '.xyz', 'fraud.nett', 'fraud.comm'] as const;
 
-export const STANDARD_CURRENCIES = ['USD', 'EUR', 'INR'] as const;
 
 // LLM Configuration Constants
 export const LLM_CONFIG = {
