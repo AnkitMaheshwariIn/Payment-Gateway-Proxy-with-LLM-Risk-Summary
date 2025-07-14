@@ -80,7 +80,7 @@ const options: swaggerJsdoc.Options = {
                 },
                 fraudScore: {
                   type: 'number',
-                  description: 'Calculated fraud risk score (0-100)'
+                  description: 'Calculated fraud risk score (0.0 to 1.0)'
                 },
                 triggeredRules: {
                   type: 'array',

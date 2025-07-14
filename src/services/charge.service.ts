@@ -80,7 +80,7 @@ export class ChargeService {
         amount: chargeData.amount,
         currency: chargeData.currency,
         status: decision === 'blocked' ? 'declined' : 'safe',
-        fraudScore: Math.round(fraudResult.fraudScore * 100),
+        fraudScore: fraudResult.fraudScore,
         triggeredRules: fraudResult.triggeredRules,
         llmExplanation: explanation
       };

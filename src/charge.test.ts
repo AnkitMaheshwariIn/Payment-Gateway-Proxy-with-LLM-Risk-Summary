@@ -163,7 +163,7 @@ describe('POST /charge', () => {
         amount: highRiskData.amount,
         currency: highRiskData.currency,
         status: 'declined',
-        fraudScore: expect.closeTo(70, 10),
+        fraudScore: expect.closeTo(0.7, 2),
         triggeredRules: expect.any(Array),
         llmExplanation: expect.any(String)
       })
@@ -212,7 +212,7 @@ describe('POST /charge', () => {
       amount: highRiskData.amount,
       currency: highRiskData.currency,
       status: 'declined',
-      fraudScore: expect.closeTo(60, 10),
+      fraudScore: expect.closeTo(0.6, 2),
       triggeredRules: expect.any(Array),
       llmExplanation: expect.any(String)
     }));
@@ -262,7 +262,7 @@ describe('POST /charge', () => {
       amount: highRiskData.amount,
       currency: highRiskData.currency,
       status: 'declined',
-      fraudScore: expect.closeTo(90, 10),
+      fraudScore: expect.closeTo(0.9, 2),
       triggeredRules: expect.any(Array),
       llmExplanation: expect.any(String)
     }));
