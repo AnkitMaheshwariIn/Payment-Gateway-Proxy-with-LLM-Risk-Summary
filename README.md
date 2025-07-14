@@ -28,6 +28,16 @@ src/
 - **Validation Service** - Reusable validation logic
 - **In-Memory Transaction Logging** - Logged each charge with transactionId and timestamp
 
+## ⚙️ Configurable Fraud Rules
+
+- Fraud detection heuristics are now defined in `src/config/fraudRules.json`
+- Each rule contains:
+  - `label`: Human-readable description
+  - `condition`: JavaScript expression as a string (evaluated at runtime)
+  - `score`: Numeric value added to fraud score if rule triggers
+- Rules are loaded and evaluated dynamically for each charge
+- Easily maintain and update risk logic by editing the JSON file—no code changes required
+
 ## API Endpoints
 
 ### GET /health

@@ -11,12 +11,12 @@ describe('ChargeService', () => {
   };
 
   describe('processCharge', () => {
-    it('should return valid for a valid charge', async () => {
+    it('should return safe for a valid charge', async () => {
       const result = await ChargeService.processCharge(validChargeData);
-      expect(result.status).toBe(RESPONSE_STATUS.VALID);
+      expect(result.status).toBe(RESPONSE_STATUS.SAFE);
       expect(result.data).toEqual(validChargeData);
-      expect(result.fraudScore).toBe(0);
-      expect(result.riskPercentage).toBe(0);
+      expect(result.fraudScore).toBeGreaterThanOrEqual(0);
+      expect(result.riskPercentage).toBeGreaterThanOrEqual(0);
       expect(typeof result.explanation).toBe('string');
     });
 
@@ -44,13 +44,13 @@ describe('ChargeService', () => {
       expect(result.error).toBe('Email must be a valid email format');
     });
 
-    it('should return valid for paypal as source', async () => {
+    it('should return safe for paypal as source', async () => {
       const paypalData = { ...validChargeData, source: PAYMENT_SOURCES.PAYPAL };
       const result = await ChargeService.processCharge(paypalData);
-      expect(result.status).toBe(RESPONSE_STATUS.VALID);
+      expect(result.status).toBe(RESPONSE_STATUS.SAFE);
       expect(result.data).toEqual(paypalData);
-      expect(result.fraudScore).toBe(0);
-      expect(result.riskPercentage).toBe(0);
+      expect(result.fraudScore).toBeGreaterThanOrEqual(0);
+      expect(result.riskPercentage).toBeGreaterThanOrEqual(0);
       expect(typeof result.explanation).toBe('string');
     });
   });

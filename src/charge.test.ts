@@ -18,8 +18,8 @@ describe('POST /charge', () => {
 
     expect(response.body.status).toBe(RESPONSE_STATUS.SAFE);
     expect(response.body.data).toEqual(validChargeData);
-    expect(response.body.fraudScore).toBe(0);
-    expect(response.body.riskPercentage).toBe(0);
+    expect(response.body.fraudScore).toBe(0.1); // Suspicious Email Pattern
+    expect(response.body.riskPercentage).toBe(10);
     expect(typeof response.body.explanation).toBe('string');
   });
 
@@ -103,8 +103,8 @@ describe('POST /charge', () => {
 
     expect(response.body.status).toBe(RESPONSE_STATUS.SAFE);
     expect(response.body.data).toEqual({ ...validChargeData, source: PAYMENT_SOURCES.PAYPAL });
-    expect(response.body.fraudScore).toBe(0);
-    expect(response.body.riskPercentage).toBe(0);
+    expect(response.body.fraudScore).toBe(0.1); // Suspicious Email Pattern
+    expect(response.body.riskPercentage).toBe(10);
     expect(typeof response.body.explanation).toBe('string');
   });
 
@@ -116,8 +116,8 @@ describe('POST /charge', () => {
 
     expect(response.body.status).toBe(RESPONSE_STATUS.SAFE);
     expect(response.body.data).toEqual({ ...validChargeData, currency: 'EUR' });
-    expect(response.body.fraudScore).toBe(0);
-    expect(response.body.riskPercentage).toBe(0);
+    expect(response.body.fraudScore).toBe(0.1); // Suspicious Email Pattern
+    expect(response.body.riskPercentage).toBe(10);
     expect(typeof response.body.explanation).toBe('string');
   });
 
@@ -137,8 +137,8 @@ describe('POST /charge', () => {
     expect(response.body).toEqual({
       status: RESPONSE_STATUS.ERROR,
       error: 'High risk',
-      fraudScore: 0.7,
-      riskPercentage: 70,
+      fraudScore: expect.closeTo(0.8, 2), // High Amount (0.3) + Suspicious Email Domain (0.4) + Suspicious Email Pattern (0.1)
+      riskPercentage: 80,
       explanation: expect.any(String)
     });
   });
@@ -156,8 +156,8 @@ describe('POST /charge', () => {
 
     expect(response.body.status).toBe(RESPONSE_STATUS.SAFE);
     expect(response.body.data).toEqual(mediumRiskData);
-    expect(response.body.fraudScore).toBeCloseTo(0.3);
-    expect(response.body.riskPercentage).toBe(30);
+    expect(response.body.fraudScore).toBe(0.4); // High Amount (0.3) + Suspicious Email Pattern (0.1)
+    expect(response.body.riskPercentage).toBe(40);
     expect(typeof response.body.explanation).toBe('string');
   });
 
@@ -175,8 +175,8 @@ describe('POST /charge', () => {
 
     expect(response.body.status).toBe(RESPONSE_STATUS.ERROR);
     expect(response.body.error).toBe('High risk');
-    expect(response.body.fraudScore).toBeCloseTo(0.6);
-    expect(response.body.riskPercentage).toBe(60);
+    expect(response.body.fraudScore).toBeCloseTo(0.7, 2); // Suspicious Email Domain (0.4) + Unsupported Currency (0.2) + Suspicious Email Pattern (0.1)
+    expect(response.body.riskPercentage).toBe(70);
     expect(typeof response.body.explanation).toBe('string');
   });
 
@@ -194,8 +194,8 @@ describe('POST /charge', () => {
 
     expect(response.body.status).toBe(RESPONSE_STATUS.SAFE);
     expect(response.body.data).toEqual(safeData);
-    expect(response.body.fraudScore).toBeCloseTo(0.3);
-    expect(response.body.riskPercentage).toBe(30);
+    expect(response.body.fraudScore).toBe(0.4); // High Amount (0.3) + Suspicious Email Pattern (0.1)
+    expect(response.body.riskPercentage).toBe(40);
     expect(typeof response.body.explanation).toBe('string');
   });
 
@@ -214,8 +214,8 @@ describe('POST /charge', () => {
 
     expect(response.body.status).toBe(RESPONSE_STATUS.ERROR);
     expect(response.body.error).toBe('High risk');
-    expect(response.body.fraudScore).toBeCloseTo(0.9);
-    expect(response.body.riskPercentage).toBe(90);
+    expect(response.body.fraudScore).toBeCloseTo(1.0, 2); // High Amount (0.3) + Suspicious Email Domain (0.4) + Unsupported Currency (0.2) + Suspicious Email Pattern (0.1)
+    expect(response.body.riskPercentage).toBe(100);
     expect(typeof response.body.explanation).toBe('string');
   });
 
