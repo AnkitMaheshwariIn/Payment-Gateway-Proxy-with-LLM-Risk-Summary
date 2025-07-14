@@ -7,7 +7,7 @@ describe('POST /charge', () => {
     amount: 100,
     currency: 'USD',
     source: PAYMENT_SOURCES.STRIPE,
-    email: 'test@example.com'
+    email: 'user@company.com'
   };
 
   it('should return 200 with safe status and fraud score for low-risk transaction', async () => {
@@ -18,8 +18,8 @@ describe('POST /charge', () => {
 
     expect(response.body.status).toBe(RESPONSE_STATUS.SAFE);
     expect(response.body.data).toEqual(validChargeData);
-    expect(response.body.fraudScore).toBe(0.1); // Suspicious Email Pattern
-    expect(response.body.riskPercentage).toBe(10);
+    expect(response.body.fraudScore).toBe(0); // Clean email, no fraud score
+    expect(response.body.riskPercentage).toBe(0);
     expect(typeof response.body.explanation).toBe('string');
   });
 
@@ -103,8 +103,8 @@ describe('POST /charge', () => {
 
     expect(response.body.status).toBe(RESPONSE_STATUS.SAFE);
     expect(response.body.data).toEqual({ ...validChargeData, source: PAYMENT_SOURCES.PAYPAL });
-    expect(response.body.fraudScore).toBe(0.1); // Suspicious Email Pattern
-    expect(response.body.riskPercentage).toBe(10);
+    expect(response.body.fraudScore).toBe(0); // Clean email, no fraud score
+    expect(response.body.riskPercentage).toBe(0);
     expect(typeof response.body.explanation).toBe('string');
   });
 
@@ -116,8 +116,8 @@ describe('POST /charge', () => {
 
     expect(response.body.status).toBe(RESPONSE_STATUS.SAFE);
     expect(response.body.data).toEqual({ ...validChargeData, currency: 'EUR' });
-    expect(response.body.fraudScore).toBe(0.1); // Suspicious Email Pattern
-    expect(response.body.riskPercentage).toBe(10);
+    expect(response.body.fraudScore).toBe(0); // Clean email, no fraud score
+    expect(response.body.riskPercentage).toBe(0);
     expect(typeof response.body.explanation).toBe('string');
   });
 
@@ -126,7 +126,7 @@ describe('POST /charge', () => {
     const highRiskData = {
       ...validChargeData,
       amount: 6000,
-      email: 'test@example.ru'
+      email: 'user@example.ru'
     };
 
     const response = await request(app)
@@ -137,8 +137,8 @@ describe('POST /charge', () => {
     expect(response.body).toEqual({
       status: RESPONSE_STATUS.ERROR,
       error: 'High risk',
-      fraudScore: expect.closeTo(0.8, 2), // High Amount (0.3) + Suspicious Email Domain (0.4) + Suspicious Email Pattern (0.1)
-      riskPercentage: 80,
+      fraudScore: expect.closeTo(0.7, 2), // High Amount (0.3) + Suspicious Email Domain (0.4)
+      riskPercentage: 70,
       explanation: expect.any(String)
     });
   });
@@ -156,16 +156,16 @@ describe('POST /charge', () => {
 
     expect(response.body.status).toBe(RESPONSE_STATUS.SAFE);
     expect(response.body.data).toEqual(mediumRiskData);
-    expect(response.body.fraudScore).toBe(0.4); // High Amount (0.3) + Suspicious Email Pattern (0.1)
-    expect(response.body.riskPercentage).toBe(40);
+    expect(response.body.fraudScore).toBe(0.3); // High Amount (0.3) only
+    expect(response.body.riskPercentage).toBe(30);
     expect(typeof response.body.explanation).toBe('string');
   });
 
   it('should return 403 for high-risk transaction (risky domain + non-standard currency)', async () => {
     const highRiskData = {
       ...validChargeData,
-      email: 'test@example.xyz',
-      currency: 'GBP'
+      email: 'user@example.xyz',
+      currency: 'JPY'
     };
 
     const response = await request(app)
@@ -175,8 +175,8 @@ describe('POST /charge', () => {
 
     expect(response.body.status).toBe(RESPONSE_STATUS.ERROR);
     expect(response.body.error).toBe('High risk');
-    expect(response.body.fraudScore).toBeCloseTo(0.7, 2); // Suspicious Email Domain (0.4) + Unsupported Currency (0.2) + Suspicious Email Pattern (0.1)
-    expect(response.body.riskPercentage).toBe(70);
+    expect(response.body.fraudScore).toBeCloseTo(0.6, 2); // Suspicious Email Domain (0.4) + Unsupported Currency (0.2)
+    expect(response.body.riskPercentage).toBe(60);
     expect(typeof response.body.explanation).toBe('string');
   });
 
@@ -194,8 +194,8 @@ describe('POST /charge', () => {
 
     expect(response.body.status).toBe(RESPONSE_STATUS.SAFE);
     expect(response.body.data).toEqual(safeData);
-    expect(response.body.fraudScore).toBe(0.4); // High Amount (0.3) + Suspicious Email Pattern (0.1)
-    expect(response.body.riskPercentage).toBe(40);
+    expect(response.body.fraudScore).toBe(0.3); // High Amount (0.3) only
+    expect(response.body.riskPercentage).toBe(30);
     expect(typeof response.body.explanation).toBe('string');
   });
 
@@ -203,8 +203,8 @@ describe('POST /charge', () => {
     const highRiskData = {
       ...validChargeData,
       amount: 6000,
-      email: 'test@example.ru',
-      currency: 'GBP'
+      email: 'user@example.ru',
+      currency: 'JPY'
     };
 
     const response = await request(app)
@@ -214,8 +214,8 @@ describe('POST /charge', () => {
 
     expect(response.body.status).toBe(RESPONSE_STATUS.ERROR);
     expect(response.body.error).toBe('High risk');
-    expect(response.body.fraudScore).toBeCloseTo(1.0, 2); // High Amount (0.3) + Suspicious Email Domain (0.4) + Unsupported Currency (0.2) + Suspicious Email Pattern (0.1)
-    expect(response.body.riskPercentage).toBe(100);
+    expect(response.body.fraudScore).toBeCloseTo(0.9, 2); // High Amount (0.3) + Suspicious Email Domain (0.4) + Unsupported Currency (0.2)
+    expect(response.body.riskPercentage).toBe(90);
     expect(typeof response.body.explanation).toBe('string');
   });
 

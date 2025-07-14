@@ -6,6 +6,7 @@ import express, { Request, Response } from 'express';
 import swaggerUi from 'swagger-ui-express';
 import chargeRoutes from './routes/charge.routes';
 import transactionsRoutes from './routes/transactions.routes';
+import cacheRoutes from './routes/cache.routes';
 import { SERVER_CONFIG, RESPONSE_STATUS } from './constants/app.constants';
 import { HealthService } from './services/health.service';
 import { swaggerSpec } from './utils/swagger';
@@ -31,6 +32,7 @@ app.get('/health', (_req: Request, res: Response) => {
 // Routes
 app.use('/', chargeRoutes);
 app.use('/', transactionsRoutes);
+app.use('/', cacheRoutes);
 
 /**
  * Initialize server with health checks
@@ -57,6 +59,7 @@ async function initializeServer(): Promise<void> {
       console.log(`📚 API Documentation available at http://${SERVER_CONFIG.HOST}:${PORT}/docs`);
       console.log(`💳 Charge endpoint available at http://${SERVER_CONFIG.HOST}:${PORT}/charge`);
       console.log(`📊 Transactions endpoint available at http://${SERVER_CONFIG.HOST}:${PORT}/transactions`);
+      console.log(`🗑️  Cache management available at http://${SERVER_CONFIG.HOST}:${PORT}/cache/stats`);
       
       if (healthStatus.overall === 'healthy') {
         console.log('🎉 All services are healthy! Server is ready to handle requests.');

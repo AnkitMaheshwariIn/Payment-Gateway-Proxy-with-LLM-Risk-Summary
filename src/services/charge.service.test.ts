@@ -7,7 +7,7 @@ describe('ChargeService', () => {
     amount: 100,
     currency: 'USD',
     source: PAYMENT_SOURCES.STRIPE,
-    email: 'test@example.com'
+    email: 'user@company.com'
   };
 
   describe('processCharge', () => {

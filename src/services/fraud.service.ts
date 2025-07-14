@@ -1,6 +1,7 @@
 import { ChargeRequest, FraudScoreResult } from '../interfaces/charge.interface';
 import { FraudRule, FraudRulesConfig } from '../interfaces/fraud.interface';
 import { FRAUD_SCORING } from '../constants/app.constants';
+import { ConfigLoader } from '../utils/configLoader';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -84,12 +85,33 @@ export class FraudService {
       let fraudScore = 0;
       const triggeredRules: string[] = [];
 
+      // Load risky domains for email validation
+      const riskyDomains = ConfigLoader.loadRiskyDomains();
+      
+      // Load supported currencies for validation
+      const supportedCurrencies = ConfigLoader.getActiveCurrencyCodes();
+      
+      // Helper function to check if email domain is risky
+      const isRiskyDomain = (email: string): boolean => {
+        const domain = email.toLowerCase().split('@')[1];
+        return riskyDomains.some(riskyDomain => 
+          domain.endsWith(riskyDomain.toLowerCase())
+        );
+      };
+
+      // Helper function to check if currency is supported
+      const isSupportedCurrency = (currency: string): boolean => {
+        return supportedCurrencies.includes(currency.toUpperCase());
+      };
+
       // Variables available for rule evaluation
       const variables = {
         amount: chargeData.amount,
         currency: chargeData.currency,
         source: chargeData.source,
-        email: chargeData.email
+        email: chargeData.email,
+        isRiskyDomain,
+        isSupportedCurrency
       };
 
       // Evaluate each rule

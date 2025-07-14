@@ -77,6 +77,36 @@ Health check endpoint that returns server status.
 ### GET /transactions
 Returns all stored transactions from the in-memory transaction log.
 
+### DELETE /cache/clear
+Clears the in-memory cache of LLM-generated fraud explanations.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Cache cleared successfully",
+  "data": {
+    "previousCacheSize": 15,
+    "currentCacheSize": 0
+  }
+}
+```
+
+### GET /cache/stats
+Returns current statistics about the LLM explanation cache.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Cache statistics retrieved successfully",
+  "data": {
+    "cacheSize": 23,
+    "cacheStatus": "active"
+  }
+}
+```
+
 **Response:**
 ```json
 {
