@@ -14,7 +14,7 @@ describe('FraudService', () => {
     console.log = originalConsoleLog;
   });
 
-  describe('calculateFraudScore', () => {
+  describe('calculateRiskScore', () => {
     const baseChargeData: ChargeRequest = {
       amount: 100,
       currency: 'USD',
@@ -23,8 +23,8 @@ describe('FraudService', () => {
     };
 
     it('should return score 0 for clean input', async () => {
-      const result = await FraudService.calculateFraudScore(baseChargeData);
-      expect(result.fraudScore).toBe(0);
+      const result = await FraudService.calculateRiskScore(baseChargeData);
+      expect(result.riskScore).toBe(0);
       expect(result.riskPercentage).toBe(0);
       expect(result.isHighRisk).toBe(false);
       expect(result.triggeredRules).toEqual([]);
@@ -35,8 +35,8 @@ describe('FraudService', () => {
         ...baseChargeData,
         amount: 6000
       };
-      const result = await FraudService.calculateFraudScore(highAmountData);
-      expect(result.fraudScore).toBe(0.3);
+      const result = await FraudService.calculateRiskScore(highAmountData);
+      expect(result.riskScore).toBe(0.3);
       expect(result.riskPercentage).toBe(30);
       expect(result.isHighRisk).toBe(false);
       expect(result.triggeredRules.sort()).toEqual(['High Amount'].sort());
@@ -47,8 +47,8 @@ describe('FraudService', () => {
         ...baseChargeData,
         email: 'customer@example.ru'
       };
-      const result = await FraudService.calculateFraudScore(riskyDomainData);
-      expect(result.fraudScore).toBe(0.4);
+      const result = await FraudService.calculateRiskScore(riskyDomainData);
+      expect(result.riskScore).toBe(0.4);
       expect(result.riskPercentage).toBe(40);
       expect(result.isHighRisk).toBe(false);
       expect(result.triggeredRules.sort()).toEqual(['Suspicious Email Domain'].sort());
@@ -59,8 +59,8 @@ describe('FraudService', () => {
         ...baseChargeData,
         email: 'customer@example.xyz'
       };
-      const result = await FraudService.calculateFraudScore(riskyDomainData);
-      expect(result.fraudScore).toBe(0.4);
+      const result = await FraudService.calculateRiskScore(riskyDomainData);
+      expect(result.riskScore).toBe(0.4);
       expect(result.riskPercentage).toBe(40);
       expect(result.isHighRisk).toBe(false);
       expect(result.triggeredRules.sort()).toEqual(['Suspicious Email Domain'].sort());
@@ -71,8 +71,8 @@ describe('FraudService', () => {
         ...baseChargeData,
         currency: 'JPY'
       };
-      const result = await FraudService.calculateFraudScore(unsupportedCurrencyData);
-      expect(result.fraudScore).toBe(0.2);
+      const result = await FraudService.calculateRiskScore(unsupportedCurrencyData);
+      expect(result.riskScore).toBe(0.2);
       expect(result.riskPercentage).toBe(20);
       expect(result.isHighRisk).toBe(false);
       expect(result.triggeredRules.sort()).toEqual(['Unsupported Currency'].sort());
@@ -85,9 +85,9 @@ describe('FraudService', () => {
         email: 'customer@example.ru',
         currency: 'JPY'
       };
-      const result = await FraudService.calculateFraudScore(multipleRiskData);
+      const result = await FraudService.calculateRiskScore(multipleRiskData);
       const expectedScore = 0.3 + 0.4 + 0.2; // High Amount + Suspicious Email Domain + Unsupported Currency
-      expect(result.fraudScore).toBeCloseTo(expectedScore);
+      expect(result.riskScore).toBeCloseTo(expectedScore);
       expect(result.riskPercentage).toBe(90);
       expect(result.isHighRisk).toBe(true);
       expect(result.triggeredRules.sort()).toEqual(['High Amount', 'Suspicious Email Domain', 'Unsupported Currency'].sort());
@@ -98,8 +98,8 @@ describe('FraudService', () => {
         ...baseChargeData,
         email: 'customer@EXAMPLE.RU'
       };
-      const result = await FraudService.calculateFraudScore(mixedCaseData);
-      expect(result.fraudScore).toBe(0.4);
+      const result = await FraudService.calculateRiskScore(mixedCaseData);
+      expect(result.riskScore).toBe(0.4);
       expect(result.triggeredRules.sort()).toEqual(['Suspicious Email Domain'].sort());
     });
 
@@ -108,8 +108,8 @@ describe('FraudService', () => {
         ...baseChargeData,
         email: 'customer@'
       };
-      const result = await FraudService.calculateFraudScore(invalidEmailData);
-      expect(result.fraudScore).toBe(0);
+      const result = await FraudService.calculateRiskScore(invalidEmailData);
+      expect(result.riskScore).toBe(0);
       expect(result.triggeredRules).toEqual([]);
     });
 
@@ -119,8 +119,8 @@ describe('FraudService', () => {
         amount: 6000,
         email: 'customer@example.ru'
       };
-      const result = await FraudService.calculateFraudScore(highRiskData);
-      expect(result.fraudScore).toBeCloseTo(0.7);
+      const result = await FraudService.calculateRiskScore(highRiskData);
+      expect(result.riskScore).toBeCloseTo(0.7);
       expect(result.isHighRisk).toBe(true);
     });
 
@@ -129,8 +129,8 @@ describe('FraudService', () => {
         ...baseChargeData,
         amount: 6000
       };
-      const result = await FraudService.calculateFraudScore(lowRiskData);
-      expect(result.fraudScore).toBe(0.3);
+      const result = await FraudService.calculateRiskScore(lowRiskData);
+      expect(result.riskScore).toBe(0.3);
       expect(result.isHighRisk).toBe(false);
     });
 
@@ -141,8 +141,8 @@ describe('FraudService', () => {
           ...baseChargeData,
           currency
         };
-        const result = await FraudService.calculateFraudScore(standardCurrencyData);
-        expect(result.fraudScore).toBe(0);
+        const result = await FraudService.calculateRiskScore(standardCurrencyData);
+        expect(result.riskScore).toBe(0);
         expect(result.triggeredRules).not.toContain('Unsupported Currency');
       }
     });
@@ -154,8 +154,8 @@ describe('FraudService', () => {
           ...baseChargeData,
           email: `customer@example${domain}`
         };
-        const result = await FraudService.calculateFraudScore(riskyDomainData);
-        expect(result.fraudScore).toBe(0.4);
+        const result = await FraudService.calculateRiskScore(riskyDomainData);
+        expect(result.riskScore).toBe(0.4);
         expect(result.triggeredRules.sort()).toEqual(['Suspicious Email Domain'].sort());
       }
     });
@@ -165,8 +165,8 @@ describe('FraudService', () => {
         ...baseChargeData,
         amount: 15000
       };
-      const result = await FraudService.calculateFraudScore(veryHighAmountData);
-      expect(result.fraudScore).toBe(0.5); // Only Very High Amount (0.5) should trigger
+      const result = await FraudService.calculateRiskScore(veryHighAmountData);
+      expect(result.riskScore).toBe(0.5); // Only Very High Amount (0.5) should trigger
       expect(result.riskPercentage).toBe(50);
       expect(result.isHighRisk).toBe(true);
       expect(result.triggeredRules.sort()).toEqual(['Very High Amount'].sort());
@@ -177,8 +177,8 @@ describe('FraudService', () => {
         ...baseChargeData,
         email: 'test@company.com'
       };
-      const result = await FraudService.calculateFraudScore(suspiciousEmailData);
-      expect(result.fraudScore).toBe(0.1); // Suspicious Email Pattern rule
+      const result = await FraudService.calculateRiskScore(suspiciousEmailData);
+      expect(result.riskScore).toBe(0.1); // Suspicious Email Pattern rule
       expect(result.triggeredRules).toEqual(['Suspicious Email Pattern']);
     });
 
@@ -187,8 +187,8 @@ describe('FraudService', () => {
         ...baseChargeData,
         source: 'square'
       };
-      const result = await FraudService.calculateFraudScore(nonStandardSourceData);
-      expect(result.fraudScore).toBe(0.3);
+      const result = await FraudService.calculateRiskScore(nonStandardSourceData);
+      expect(result.riskScore).toBe(0.3);
       expect(result.triggeredRules.sort()).toEqual(['Non-Standard Payment Source'].sort());
     });
 
@@ -205,14 +205,14 @@ describe('FraudService', () => {
         amount: 6000
       };
 
-      const result1 = await FraudService.calculateFraudScore(data1);
-      const result2 = await FraudService.calculateFraudScore(data2);
+      const result1 = await FraudService.calculateRiskScore(data1);
+      const result2 = await FraudService.calculateRiskScore(data2);
 
-      expect(result1.fraudScore).toBe(result2.fraudScore);
+      expect(result1.riskScore).toBe(result2.riskScore);
       expect(result1.triggeredRules.sort()).toEqual(result2.triggeredRules.sort());
     });
 
-    it('should cap risk percentage at 100 and fraudScore at 1.0', async () => {
+    it('should cap risk percentage at 100 and riskScore at 1.0', async () => {
       // This input triggers all rules
       const allRiskData: ChargeRequest = {
         amount: 20000, // triggers High Amount + Very High Amount
@@ -220,9 +220,9 @@ describe('FraudService', () => {
         source: 'square', // triggers Non-Standard Payment Source
         email: 'test@fraud.nett' // triggers Suspicious Email Domain + Suspicious Email Pattern
       };
-      const result = await FraudService.calculateFraudScore(allRiskData);
+      const result = await FraudService.calculateRiskScore(allRiskData);
       expect(result.riskPercentage).toBe(100);
-      expect(result.fraudScore).toBe(1.0);
+      expect(result.riskScore).toBe(1.0);
       expect(result.isHighRisk).toBe(true);
     });
   });

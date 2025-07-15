@@ -19,9 +19,9 @@ describe('ChargeService', () => {
         amount: validChargeData.amount,
         currency: validChargeData.currency,
         status: 'safe',
-        fraudScore: expect.any(Number),
+        riskScore: expect.any(Number),
         triggeredRules: expect.any(Array),
-        llmExplanation: expect.any(String)
+        explanation: expect.any(String)
       }));
     });
 
@@ -58,9 +58,9 @@ describe('ChargeService', () => {
         amount: paypalData.amount,
         currency: paypalData.currency,
         status: 'safe',
-        fraudScore: expect.any(Number),
+        riskScore: expect.any(Number),
         triggeredRules: expect.any(Array),
-        llmExplanation: expect.any(String)
+        explanation: expect.any(String)
       }));
     });
   });

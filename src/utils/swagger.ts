@@ -78,7 +78,7 @@ const options: swaggerJsdoc.Options = {
                   type: 'string',
                   description: 'Transaction status (safe, declined)'
                 },
-                fraudScore: {
+                riskScore: {
                   type: 'number',
                   description: 'Calculated fraud risk score (0.0 to 1.0)'
                 },
@@ -89,7 +89,7 @@ const options: swaggerJsdoc.Options = {
                   },
                   description: 'List of triggered fraud rules'
                 },
-                llmExplanation: {
+                explanation: {
                   type: 'string',
                   description: 'Natural language explanation of the fraud assessment'
                 }
@@ -125,7 +125,7 @@ const options: swaggerJsdoc.Options = {
               type: 'string',
               description: 'Customer email'
             },
-            fraudScore: {
+            riskScore: {
               type: 'number',
               description: 'Fraud risk score'
             },
@@ -133,7 +133,7 @@ const options: swaggerJsdoc.Options = {
               type: 'string',
               description: 'Transaction decision'
             },
-            llmExplanation: {
+            explanation: {
               type: 'string',
               description: 'LLM explanation of the decision'
             }

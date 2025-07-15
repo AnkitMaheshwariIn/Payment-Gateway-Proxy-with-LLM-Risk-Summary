@@ -9,7 +9,7 @@ export interface FraudRulesConfig {
 }
 
 export interface FraudEvaluationResult {
-  fraudScore: number;
+  riskScore: number;
   triggeredRules: string[];
   riskPercentage: number;
 } 

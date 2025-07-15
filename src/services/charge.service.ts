@@ -48,19 +48,19 @@ export class ChargeService {
       }
 
       // Calculate fraud score (now async)
-      const fraudResult = await FraudService.calculateFraudScore(chargeData);
+      const fraudResult = await FraudService.calculateRiskScore(chargeData);
 
       // Generate LLM explanation
       const explanation = await LLMService.generateFraudExplanation(
         chargeData.amount,
         chargeData.currency,
         chargeData.email,
-        fraudResult.fraudScore,
+        fraudResult.riskScore,
         fraudResult.triggeredRules
       );
 
       // Determine decision based on fraud score
-      const decision = fraudResult.fraudScore >= 0.5 ? 'blocked' : 'approved';
+      const decision = fraudResult.riskScore >= 0.5 ? 'blocked' : 'approved';
 
       // Log the transaction and get the transactionId
       const transaction = logTransaction({
@@ -68,21 +68,22 @@ export class ChargeService {
         currency: chargeData.currency,
         source: chargeData.source,
         email: chargeData.email,
-        fraudScore: fraudResult.fraudScore,
+        riskScore: fraudResult.riskScore,
         decision,
-        llmExplanation: explanation
+        explanation: explanation
       });
       const transactionId = transaction.transactionId;
 
       // Build the data object for the response
       const data = {
         transactionId,
+        provider: chargeData.source,
         amount: chargeData.amount,
         currency: chargeData.currency,
         status: decision === 'blocked' ? 'declined' : 'safe',
-        fraudScore: fraudResult.fraudScore,
+        riskScore: fraudResult.riskScore,
         triggeredRules: fraudResult.triggeredRules,
-        llmExplanation: explanation
+        explanation: explanation
       };
 
       // Check if transaction is high risk

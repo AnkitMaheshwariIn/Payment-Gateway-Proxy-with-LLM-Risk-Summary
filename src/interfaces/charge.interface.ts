@@ -13,9 +13,9 @@ export interface ChargeResponse {
     amount: number;
     currency: string;
     status: string;
-    fraudScore: number;
+    riskScore: number;
     triggeredRules: string[];
-    llmExplanation: string;
+    explanation: string;
   } | null;
 }
 
@@ -24,8 +24,8 @@ export interface ValidationResult {
   error?: string;
 }
 
-export interface FraudScoreResult {
-  fraudScore: number;
+export interface RiskScoreResult {
+  riskScore: number;
   riskPercentage: number;
   isHighRisk: boolean;
   triggeredRules: string[];

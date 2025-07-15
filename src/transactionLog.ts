@@ -7,9 +7,9 @@ export interface TransactionLogEntry {
   currency: string;
   source: string;
   email: string;
-  fraudScore: number;
+  riskScore: number;
   decision: 'approved' | 'blocked';
-  llmExplanation: string;
+  explanation: string;
 }
 
 export interface TransactionData {
@@ -17,9 +17,9 @@ export interface TransactionData {
   currency: string;
   source: string;
   email: string;
-  fraudScore: number;
+  riskScore: number;
   decision: 'approved' | 'blocked';
-  llmExplanation: string;
+  explanation: string;
 }
 
 // In-memory storage for transactions

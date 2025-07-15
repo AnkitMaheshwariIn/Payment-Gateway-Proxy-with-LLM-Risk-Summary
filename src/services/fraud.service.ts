@@ -1,4 +1,4 @@
-import { ChargeRequest, FraudScoreResult } from '../interfaces/charge.interface';
+import { ChargeRequest, RiskScoreResult } from '../interfaces/charge.interface';
 import { FraudRule, FraudRulesConfig } from '../interfaces/fraud.interface';
 import { FRAUD_SCORING } from '../constants/app.constants';
 import { ConfigLoader } from '../utils/configLoader';
@@ -69,25 +69,25 @@ export class FraudService {
    * Each rule is evaluated dynamically using JavaScript expressions.
    * 
    * @param chargeData - The charge request data to evaluate
-   * @returns Promise<FraudScoreResult> - Fraud scoring result with triggered rules
+   * @returns Promise<RiskScoreResult> - Fraud scoring result with triggered rules
    * 
    * @example
    * ```typescript
-   * const result = await FraudService.calculateFraudScore({
+   * const result = await FraudService.calculateRiskScore({
    *   amount: 6000,
    *   currency: 'GBP',
    *   source: 'stripe',
    *   email: 'test@example.ru'
    * });
-   * // Returns: { fraudScore: 0.9, riskPercentage: 90, isHighRisk: true, triggeredRules: [...] }
+   * // Returns: { riskScore: 0.9, riskPercentage: 90, isHighRisk: true, triggeredRules: [...] }
    * ```
    */
-  public static async calculateFraudScore(chargeData: ChargeRequest): Promise<FraudScoreResult> {
+  public static async calculateRiskScore(chargeData: ChargeRequest): Promise<RiskScoreResult> {
     try {
       // Load fraud rules from configuration
       const rules = await this.loadFraudRules();
       
-      let fraudScore = 0;
+      let riskScore = 0;
       const triggeredRules: string[] = [];
 
       // Load risky domains for email validation
@@ -124,24 +124,24 @@ export class FraudService {
         const isTriggered = this.evaluateCondition(rule.condition, variables);
         
         if (isTriggered) {
-          fraudScore += rule.score; // now integer
+          riskScore += rule.score; // now integer
           triggeredRules.push(rule.label);
           console.log(`🚨 Fraud rule triggered: ${rule.label} (score: ${rule.score})`);
         }
       }
 
       // Cap risk percentage at 100
-      const riskPercentage = Math.min(Math.round(fraudScore), 100);
-      // Set fraudScore as a 0-1.0 value for internal use
-      fraudScore = riskPercentage / 100;
+      const riskPercentage = Math.min(Math.round(riskScore), 100);
+      // Set riskScore as a 0-1.0 value for internal use
+      riskScore = riskPercentage / 100;
 
       // Determine if high risk
-      const isHighRisk = fraudScore >= FRAUD_SCORING.HIGH_RISK_THRESHOLD;
+      const isHighRisk = riskScore >= FRAUD_SCORING.HIGH_RISK_THRESHOLD;
 
-      console.log(`📊 Fraud evaluation complete: score=${fraudScore}, risk=${riskPercentage}%, rules=${triggeredRules.length}`);
+      console.log(`📊 Fraud evaluation complete: score=${riskScore}, risk=${riskPercentage}%, rules=${triggeredRules.length}`);
 
       return {
-        fraudScore,
+        riskScore,
         riskPercentage,
         isHighRisk,
         triggeredRules
@@ -151,7 +151,7 @@ export class FraudService {
       
       // Return safe defaults on error
       return {
-        fraudScore: 0,
+        riskScore: 0,
         riskPercentage: 0,
         isHighRisk: false,
         triggeredRules: []

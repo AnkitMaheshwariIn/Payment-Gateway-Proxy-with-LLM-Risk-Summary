@@ -97,9 +97,9 @@ Returns all stored transactions from the in-memory transaction log.
         "currency": "USD",
         "source": "stripe",
         "email": "user@example.com",
-        "fraudScore": 0.3,
+        "riskScore": 0.3,
         "decision": "approved",
-        "llmExplanation": "Transaction flagged as medium risk due to high transaction amount."
+        "explanation": "Transaction flagged as medium risk due to high transaction amount."
       }
     ],
     "count": 1
@@ -214,9 +214,9 @@ The system calculates a fraud score (0.0 to 1.0) based on configurable risk fact
     "amount": 100,
     "currency": "USD",
     "status": "safe",
-    "fraudScore": 0.3,
+    "riskScore": 0.3,
     "triggeredRules": ["high_amount"],
-    "llmExplanation": "Transaction flagged as medium risk due to high transaction amount."
+    "explanation": "Transaction flagged as medium risk due to high transaction amount."
   }
 }
 ```
@@ -231,9 +231,9 @@ The system calculates a fraud score (0.0 to 1.0) based on configurable risk fact
     "amount": 6000,
     "currency": "USD",
     "status": "declined",
-    "fraudScore": 0.7,
+    "riskScore": 0.7,
     "triggeredRules": ["high_amount", "suspicious_email"],
-    "llmExplanation": "Transaction flagged as high risk due to suspicious email domain and high amount."
+    "explanation": "Transaction flagged as high risk due to suspicious email domain and high amount."
   }
 }
 ```

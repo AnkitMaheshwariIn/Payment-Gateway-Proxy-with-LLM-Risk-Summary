@@ -45,18 +45,18 @@ const router = Router();
  *                       currency: "USD"
  *                       source: "tok_visa"
  *                       email: "customer@example.com"
- *                       fraudScore: 15.5
+ *                       riskScore: 15.5
  *                       decision: "safe"
- *                       llmExplanation: "This transaction appears safe with moderate risk factors."
+ *                       explanation: "This transaction appears safe with moderate risk factors."
  *                     - id: "txn_987654321"
  *                       timestamp: "2024-01-15T11:45:00.000Z"
  *                       amount: 5000.00
  *                       currency: "USD"
  *                       source: "tok_visa"
  *                       email: "test123@temp.com"
- *                       fraudScore: 85.2
+ *                       riskScore: 85.2
  *                       decision: "declined"
- *                       llmExplanation: "This transaction shows multiple high-risk indicators and should be declined."
+ *                       explanation: "This transaction shows multiple high-risk indicators and should be declined."
  *       500:
  *         description: Internal server error
  *         content:

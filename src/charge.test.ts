@@ -22,9 +22,9 @@ describe('POST /charge', () => {
       amount: validChargeData.amount,
       currency: validChargeData.currency,
       status: 'safe',
-      fraudScore: expect.any(Number),
+      riskScore: expect.any(Number),
       triggeredRules: expect.any(Array),
-      llmExplanation: expect.any(String)
+      explanation: expect.any(String)
     }));
   });
 
@@ -118,9 +118,9 @@ describe('POST /charge', () => {
       amount: validChargeData.amount,
       currency: validChargeData.currency,
       status: 'safe',
-      fraudScore: expect.any(Number),
+      riskScore: expect.any(Number),
       triggeredRules: expect.any(Array),
-      llmExplanation: expect.any(String)
+      explanation: expect.any(String)
     }));
   });
 
@@ -136,9 +136,9 @@ describe('POST /charge', () => {
       amount: validChargeData.amount,
       currency: 'EUR',
       status: 'safe',
-      fraudScore: expect.any(Number),
+      riskScore: expect.any(Number),
       triggeredRules: expect.any(Array),
-      llmExplanation: expect.any(String)
+      explanation: expect.any(String)
     }));
   });
 
@@ -163,9 +163,9 @@ describe('POST /charge', () => {
         amount: highRiskData.amount,
         currency: highRiskData.currency,
         status: 'declined',
-        fraudScore: expect.closeTo(0.7, 2),
+        riskScore: expect.closeTo(0.7, 2),
         triggeredRules: expect.any(Array),
-        llmExplanation: expect.any(String)
+        explanation: expect.any(String)
       })
     });
   });
@@ -187,9 +187,9 @@ describe('POST /charge', () => {
       amount: mediumRiskData.amount,
       currency: mediumRiskData.currency,
       status: 'safe',
-      fraudScore: expect.any(Number),
+      riskScore: expect.any(Number),
       triggeredRules: expect.any(Array),
-      llmExplanation: expect.any(String)
+      explanation: expect.any(String)
     }));
   });
 
@@ -212,9 +212,9 @@ describe('POST /charge', () => {
       amount: highRiskData.amount,
       currency: highRiskData.currency,
       status: 'declined',
-      fraudScore: expect.closeTo(0.6, 2),
+      riskScore: expect.closeTo(0.6, 2),
       triggeredRules: expect.any(Array),
-      llmExplanation: expect.any(String)
+      explanation: expect.any(String)
     }));
   });
 
@@ -236,9 +236,9 @@ describe('POST /charge', () => {
       amount: safeData.amount,
       currency: safeData.currency,
       status: 'safe',
-      fraudScore: expect.any(Number),
+      riskScore: expect.any(Number),
       triggeredRules: expect.any(Array),
-      llmExplanation: expect.any(String)
+      explanation: expect.any(String)
     }));
   });
 
@@ -262,9 +262,9 @@ describe('POST /charge', () => {
       amount: highRiskData.amount,
       currency: highRiskData.currency,
       status: 'declined',
-      fraudScore: expect.closeTo(0.9, 2),
+      riskScore: expect.closeTo(0.9, 2),
       triggeredRules: expect.any(Array),
-      llmExplanation: expect.any(String)
+      explanation: expect.any(String)
     }));
   });
 

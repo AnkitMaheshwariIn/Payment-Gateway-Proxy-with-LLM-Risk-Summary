@@ -65,7 +65,7 @@ export class LLMService {
    * @param amount - Transaction amount in the specified currency
    * @param currency - Three-letter currency code (e.g., USD, EUR)
    * @param email - Customer email address
-   * @param fraudScore - Calculated fraud score (0.0 to 1.0)
+   * @param riskScore - Calculated fraud score (0.0 to 1.0)
    * @param triggeredRules - Array of risk factors that were triggered during fraud analysis
    * @returns Promise<string> - Natural language explanation of the fraud risk
    * 
@@ -82,7 +82,7 @@ export class LLMService {
     amount: number,
     currency: string,
     email: string,
-    fraudScore: number,
+    riskScore: number,
     triggeredRules: string[]
   ): Promise<string> {
     try {
@@ -99,14 +99,14 @@ export class LLMService {
       const openai = this.getOpenAI();
       
       // Calculate risk percentage for better readability
-      const riskPercentage = Math.round(fraudScore * 100);
+      const riskPercentage = Math.round(riskScore * 100);
       
       // Build dynamic prompt by replacing placeholders in the template
       const prompt = LLM_PROMPT_TEMPLATE.FRAUD_EXPLANATION
         .replace('{amount}', amount.toString())
         .replace('{currency}', currency)
         .replace('{email}', email)
-        .replace('{fraudScore}', fraudScore.toString())
+        .replace('{riskScore}', riskScore.toString())
         .replace('{riskPercentage}', riskPercentage.toString())
         .replace('{triggeredRules}', triggeredRules.join(', '));
 
@@ -131,7 +131,7 @@ export class LLMService {
       const generatedExplanation = completion.choices[0]?.message?.content?.trim();
       
       // Get final explanation (generated or fallback)
-      const finalExplanation = generatedExplanation || this.generateFallbackExplanation(fraudScore, triggeredRules);
+      const finalExplanation = generatedExplanation || this.generateFallbackExplanation(riskScore, triggeredRules);
       
       // Store the explanation in cache for future use
       this.explanationCache.set(cacheKey, finalExplanation);
@@ -143,7 +143,7 @@ export class LLMService {
       // Log error for debugging purposes
       console.error('Error generating fraud explanation via OpenAI API:', error);
       // Generate fallback explanation
-      const fallback = this.generateFallbackExplanation(fraudScore, triggeredRules);
+      const fallback = this.generateFallbackExplanation(riskScore, triggeredRules);
       // Cache the fallback explanation as well
       const cacheKey = this.generateCacheKey(amount, currency, email, triggeredRules);
       this.explanationCache.set(cacheKey, fallback);
@@ -157,17 +157,17 @@ export class LLMService {
    * Generates a fallback explanation when OpenAI API is unavailable or fails.
    * Provides a basic but informative explanation using the available data.
    * 
-   * @param fraudScore - Calculated fraud score (0.0 to 1.0)
+   * @param riskScore - Calculated fraud score (0.0 to 1.0)
    * @param triggeredRules - Array of risk factors that were triggered
    * @returns string - Fallback explanation
    * 
    * @private
    */
   private static generateFallbackExplanation(
-    fraudScore: number, 
+    riskScore: number, 
     triggeredRules: string[]
   ): string {
-    const riskPercentage = Math.round(fraudScore * 100);
+    const riskPercentage = Math.round(riskScore * 100);
     
     if (triggeredRules.length === 0) {
       return `Transaction appears safe with ${riskPercentage}% risk score and no specific risk factors detected.`;

@@ -67,7 +67,7 @@ export const LLM_PROMPT_TEMPLATE = {
 Transaction Details:
 - Amount: {amount} {currency}
 - Email: {email}
-- Fraud Score: {fraudScore} ({riskPercentage}% risk)
+- Fraud Score: {riskScore} ({riskPercentage}% risk)
 - Triggered Risk Factors: {triggeredRules}
 
 Please provide a brief, natural language explanation (1-2 sentences) explaining why this transaction was flagged and what risk factors contributed to the score. Focus on being clear and professional.

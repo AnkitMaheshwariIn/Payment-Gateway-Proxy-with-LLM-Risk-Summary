@@ -44,9 +44,9 @@ describe('GET /transactions', () => {
         currency: 'USD',
         source: 'stripe',
         email: 'test1@example.com',
-        fraudScore: 0.3,
+        riskScore: 0.3,
         decision: 'approved' as const,
-        llmExplanation: 'Low risk transaction'
+        explanation: 'Low risk transaction'
       },
       {
         transactionId: 'test-id-2',
@@ -55,9 +55,9 @@ describe('GET /transactions', () => {
         currency: 'EUR',
         source: 'paypal',
         email: 'test2@example.ru',
-        fraudScore: 0.7,
+        riskScore: 0.7,
         decision: 'blocked' as const,
-        llmExplanation: 'High risk transaction'
+        explanation: 'High risk transaction'
       }
     ];
 
@@ -80,9 +80,9 @@ describe('GET /transactions', () => {
       currency: 'USD',
       source: 'stripe',
       email: 'test1@example.com',
-      fraudScore: 0.3,
+      riskScore: 0.3,
       decision: 'approved',
-      llmExplanation: 'Low risk transaction'
+      explanation: 'Low risk transaction'
     });
 
     expect(transactions[1]).toMatchObject({
@@ -92,9 +92,9 @@ describe('GET /transactions', () => {
       currency: 'EUR',
       source: 'paypal',
       email: 'test2@example.ru',
-      fraudScore: 0.7,
+      riskScore: 0.7,
       decision: 'blocked',
-      llmExplanation: 'High risk transaction'
+      explanation: 'High risk transaction'
     });
 
     // Verify transaction IDs are unique
@@ -110,9 +110,9 @@ describe('GET /transactions', () => {
         currency: 'EUR',
         source: 'paypal',
         email: 'test2@example.com',
-        fraudScore: 0.0,
+        riskScore: 0.0,
         decision: 'approved' as const,
-        llmExplanation: 'Second transaction'
+        explanation: 'Second transaction'
       },
       {
         transactionId: 'test-id-1',
@@ -121,9 +121,9 @@ describe('GET /transactions', () => {
         currency: 'USD',
         source: 'stripe',
         email: 'test1@example.com',
-        fraudScore: 0.0,
+        riskScore: 0.0,
         decision: 'approved' as const,
-        llmExplanation: 'First transaction'
+        explanation: 'First transaction'
       }
     ];
 
